@@ -11,24 +11,117 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+                <flux:navlist variant="outline">
+                    @if (auth()->user()->role === 'penimbang')
+                        <flux:navlist.group :heading="__('Menu Penimbang')" class="grid">
+                            <flux:navlist.item
+                                icon="home"
+                                :href="route('penimbang.dashboard')"
+                                :current="request()->routeIs('penimbang.dashboard')"
+                                wire:navigate
+                            >
+                                Dashboard
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="users"
+                                :href="route('penimbang.pelanggan.index')"
+                                :current="request()->routeIs('penimbang.pelanggan.*')"
+                                wire:navigate
+                            >
+                                Data Pelanggan
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="clipboard-document-list"
+                                :href="route('penimbang.transaksi.index')"
+                                :current="request()->routeIs('penimbang.transaksi.*')"
+                                wire:navigate
+                            >
+                                Transaksi Penimbangan
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="clock"
+                                href="#"
+                                wire:navigate
+                            >
+                                Riwayat Penimbangan
+                            </flux:navlist.item>
+                        </flux:navlist.group>
+                    @endif
+
+                    @if (auth()->user()->role === 'qc')
+                        <flux:navlist.group :heading="__('Menu QC')" class="grid">
+                            <flux:navlist.item
+                                icon="home"
+                                :href="route('qc.dashboard')"
+                                :current="request()->routeIs('qc.dashboard')"
+                                wire:navigate
+                            >
+                                Dashboard
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="check-badge"
+                                :href="route('qc.penilaian.index')"
+                                :current="request()->routeIs('qc.penilaian.*')"
+                                wire:navigate
+                            >
+                                Penilaian QC
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                            icon="clock"
+                            :href="route('qc.riwayat.index')"
+                            :current="request()->routeIs('qc.riwayat.*')"
+                            wire:navigate
+                        >
+                            Riwayat QC
+                        </flux:navlist.item>
+                        </flux:navlist.group>
+                    @endif
+
+                    @if (auth()->user()->role === 'kasir')
+                        <flux:navlist.group :heading="__('Menu Kasir')" class="grid">
+                            <flux:navlist.item
+                                icon="home"
+                                :href="route('kasir.dashboard')"
+                                :current="request()->routeIs('kasir.dashboard')"
+                                wire:navigate
+                            >
+                                Dashboard
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="banknotes"
+                                href="#"
+                                wire:navigate
+                            >
+                                Pembayaran
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="wallet"
+                                href="#"
+                                wire:navigate
+                            >
+                                Kasbon / Hutang
+                            </flux:navlist.item>
+
+                            <flux:navlist.item
+                                icon="document-chart-bar"
+                                href="#"
+                                wire:navigate
+                            >
+                                Laporan
+                            </flux:navlist.item>
+                        </flux:navlist.group>
+                    @endif
+                </flux:navlist>
             </flux:sidebar.nav>
 
             <flux:spacer />
-
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
