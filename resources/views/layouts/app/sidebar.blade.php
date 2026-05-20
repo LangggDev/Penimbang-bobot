@@ -79,6 +79,15 @@
                         >
                             Riwayat QC
                         </flux:navlist.item>
+
+                        <flux:navlist.item
+                                icon="calculator"
+                                :href="route('qc.fuzzy.index')"
+                                :current="request()->routeIs('qc.fuzzy.*')"
+                                wire:navigate
+                            >
+                                Hasil Fuzzy
+                            </flux:navlist.item>
                         </flux:navlist.group>
                     @endif
 

@@ -1,7 +1,8 @@
-<x-layouts::app :title="'Timbangan Kedua'">
+<x-layouts::app :title="'Timbang Bertahap'">
     <div class="px-6 py-6 lg:px-8 lg:py-8">
-        <div class="mx-auto max-w-5xl space-y-8">
+        <div class="mx-auto max-w-6xl space-y-8">
 
+            {{-- Header --}}
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div class="space-y-2">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -9,11 +10,13 @@
                     </p>
 
                     <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                        Timbangan Kedua
+                        Proses Bongkar & Timbang Bertahap
                     </h1>
 
-                    <p class="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                        Input berat kendaraan setelah barang selesai dibongkar, lalu bagi total berat bersih ke setiap jenis kertas bekas.
+                    <p class="max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                        Digunakan ketika pelanggan membawa lebih dari satu jenis kertas bekas.
+                        Setiap selesai bongkar satu jenis kertas, kendaraan ditimbang ulang.
+                        Berat jenis kertas dihitung dari selisih berat sebelumnya dengan berat setelah bongkar.
                     </p>
                 </div>
 
@@ -25,6 +28,13 @@
                 </a>
             </div>
 
+            {{-- Alert --}}
+            @if (session('success'))
+                <div class="rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
                     <ul class="list-inside list-disc space-y-1">
@@ -35,8 +45,9 @@
                 </div>
             @endif
 
+            {{-- Informasi transaksi --}}
             <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <div class="grid gap-4 md:grid-cols-2">
+                <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                     <div>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Kode Transaksi</p>
                         <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
@@ -66,160 +77,382 @@
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Berat Timbangan Pertama</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Timbang Awal</p>
+                        <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
                             {{ number_format($transaksi->berat_timbang_pertama, 2, ',', '.') }} kg
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Status</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
-                            {{ ucfirst(str_replace('_', ' ', $transaksi->status)) }}
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Berat Terakhir</p>
+                        <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                            {{ number_format($beratTerakhir, 2, ',', '.') }} kg
                         </p>
                     </div>
                 </div>
             </div>
 
-            @if ($jumlahBelumQc > 0)
-                <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-yellow-900 dark:border-yellow-900/40 dark:bg-yellow-900/20 dark:text-yellow-200">
-                    <h2 class="text-sm font-semibold">
-                        QC Belum Selesai
+            {{-- Ringkasan --}}
+            <div class="grid gap-5 md:grid-cols-3">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        Jenis Kertas
+                    </p>
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                        {{ $detailBarang->count() }}
                     </h2>
-
-                    <p class="mt-2 text-sm leading-6">
-                        Masih ada {{ $jumlahBelumQc }} jenis kertas yang belum dinilai QC.
-                        Timbangan kedua baru bisa disimpan setelah semua jenis kertas selesai dinilai QC.
+                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                        Total jenis kertas dalam transaksi.
                     </p>
                 </div>
-            @endif
 
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        Sudah Ditimbang
+                    </p>
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                        {{ $riwayatTimbang->count() }}
+                    </h2>
+                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                        Jenis kertas yang sudah selesai dibongkar.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                        Total Berat Bersih
+                    </p>
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                        {{ number_format($totalBeratBersih, 2, ',', '.') }} kg
+                    </h2>
+                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                        Akumulasi hasil bongkar bertahap.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Catatan konsep --}}
+            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
+                <h2 class="text-sm font-semibold">
+                    Cara Hitung Timbang Bertahap
+                </h2>
+
+                <p class="mt-2 text-sm leading-6">
+                    Contoh: timbang awal 1780 kg. Setelah bongkar Duplex, kendaraan ditimbang menjadi 1630 kg.
+                    Maka berat Duplex = 1780 - 1630 = 150 kg. Setelah itu berat 1630 kg menjadi acuan timbang berikutnya.
+                </p>
+            </div>
+
+            {{-- Form timbang bertahap --}}
             <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <form method="POST" action="{{ route('penimbang.transaksi.timbangan-kedua.update', $transaksi->id) }}" class="space-y-7">
-                    @csrf
-                    @method('PUT')
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-zinc-900 dark:text-white">
+                        Input Bongkar Berikutnya
+                    </h2>
 
-                    <div class="space-y-2">
-                        <label for="berat_timbang_kedua" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                            Berat Timbangan Kedua
-                        </label>
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        Pilih jenis kertas yang baru selesai dibongkar, lalu input berat kendaraan setelah bongkar.
+                    </p>
+                </div>
 
-                        <div class="relative">
-                            <input
-                                id="berat_timbang_kedua"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                name="berat_timbang_kedua"
-                                value="{{ old('berat_timbang_kedua', $transaksi->berat_timbang_kedua > 0 ? $transaksi->berat_timbang_kedua : '') }}"
-                                placeholder="0.00"
-                                required
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 pr-12 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-                            >
+                @if ($detailBelumDitimbang->count() > 0)
+                    <form
+                        method="POST"
+                        action="{{ route('penimbang.transaksi.timbang-bertahap.store', $transaksi->id) }}"
+                        class="space-y-6"
+                    >
+                        @csrf
 
-                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
-                                kg
-                            </span>
+                        <input type="hidden" id="berat_sebelumnya" value="{{ $beratTerakhir }}">
+
+                        <div class="grid gap-5 md:grid-cols-2">
+                            <div class="space-y-2">
+                                <label for="detail_transaksi_barang_id" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                    Jenis Kertas yang Dibongkar
+                                </label>
+
+                                <select
+                                    id="detail_transaksi_barang_id"
+                                    name="detail_transaksi_barang_id"
+                                    required
+                                    class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                >
+                                    <option value="">Pilih jenis kertas</option>
+                                    @foreach ($detailBelumDitimbang as $detail)
+                                        <option value="{{ $detail->detail_id }}" @selected(old('detail_transaksi_barang_id') == $detail->detail_id)>
+                                            {{ $detail->nama_barang }} - {{ $detail->kode_barang }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                        <label for="berat_barang_dibongkar" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                            Berat Barang yang Dibongkar
+                                        </label>
+
+                                        <div class="relative">
+                                            <input
+                                                id="berat_barang_dibongkar"
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                name="berat_barang_dibongkar"
+                                                value="{{ old('berat_barang_dibongkar') }}"
+                                                placeholder="Contoh: 150"
+                                                required
+                                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 pr-12 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                            >
+
+                                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                                                kg
+                                            </span>
+                                        </div>
+
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                                            Masukkan berat barang yang baru selesai dibongkar. Sistem akan mengurangi dari berat terakhir:
+                                            <strong>{{ number_format($beratTerakhir, 2, ',', '.') }} kg</strong>.
+                                        </p>
+                                    </div>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                                    Berat ini harus lebih kecil dari berat sebelumnya:
+                                    <strong>{{ number_format($beratTerakhir, 2, ',', '.') }} kg</strong>.
+                                </p>
+                            </div>
                         </div>
 
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                            Berat timbangan kedua adalah berat kendaraan setelah barang selesai dibongkar.
-                        </p>
-                    </div>
+                        <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950">
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                                Preview sisa berat setelah bongkar:
+                            </p>
 
-                    <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
-                        <h2 class="text-sm font-semibold">
-                            Catatan Pembagian Berat dan Harga
-                        </h2>
+                            <p class="mt-2 text-2xl font-bold text-zinc-900 dark:text-white">
+                                <span id="preview_sisa_berat">{{ number_format($beratTerakhir, 2, ',', '.') }}</span> kg
+                            </p>
 
-                        <p class="mt-2 text-sm leading-6">
-                            Jika pelanggan membawa lebih dari satu jenis kertas bekas, total berat bersih harus dibagi ke masing-masing jenis kertas.
-                            Harga setiap jenis kertas bisa berbeda, sehingga harga tidak diisi oleh penimbang.
-                            Harga per kg akan diisi nanti pada bagian kasir/pembayaran.
-                        </p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
-                                Pembagian Berat Bersih per Jenis Kertas
-                            </h2>
-
-                            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                                Total input berat bersih semua jenis kertas harus sama dengan hasil:
-                                <span class="font-semibold">berat timbang pertama - berat timbang kedua</span>.
+                            <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                Rumus: berat terakhir - berat barang yang dibongkar.
                             </p>
                         </div>
 
-                        <div class="space-y-3">
-                            @foreach ($detailBarang as $detail)
-                                <div class="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800">
-                                    <div class="grid gap-4 md:grid-cols-[1fr_240px] md:items-center">
-                                        <div>
-                                            <div class="flex flex-wrap items-center gap-3">
-                                                <h3 class="font-semibold text-zinc-900 dark:text-white">
-                                                    {{ $detail->nama_barang }}
-                                                </h3>
+                        <div class="space-y-2">
+                            <label for="catatan" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                                Catatan
+                            </label>
 
-                                                <span class="rounded-full px-3 py-1 text-xs font-medium
-                                                    {{ $detail->status_qc === 'sudah_dinilai'
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $detail->status_qc)) }}
-                                                </span>
-                                            </div>
+                            <textarea
+                                id="catatan"
+                                name="catatan"
+                                rows="3"
+                                placeholder="Opsional, misalnya: bongkar duplex selesai"
+                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            >{{ old('catatan') }}</textarea>
+                        </div>
 
-                                            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                                                Kode: {{ $detail->kode_barang }}
-                                            </p>
-                                        </div>
+                        <div class="flex justify-end">
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            >
+                                Simpan Timbang Bertahap
+                            </button>
+                        </div>
+                    </form>
+                @else
+                    <div class="rounded-2xl border border-green-200 bg-green-50 p-5 text-green-900 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-200">
+                        <h3 class="font-semibold">
+                            Semua jenis kertas sudah ditimbang.
+                        </h3>
 
-                                        <div class="space-y-2">
-                                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                                Berat Bersih
-                                            </label>
+                        <p class="mt-2 text-sm leading-6">
+                            Timbangan terakhir dianggap sebagai berat kendaraan kosong.
+                            Jika data sudah benar, selesaikan penimbangan untuk melanjutkan transaksi ke tahap pembayaran.
+                        </p>
 
-                                            <div class="relative">
-                                                <input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    name="berat_bersih_detail[{{ $detail->detail_id }}]"
-                                                    value="{{ old('berat_bersih_detail.' . $detail->detail_id, $detail->total_berat_bersih > 0 ? $detail->total_berat_bersih : '') }}"
-                                                    placeholder="0.00"
-                                                    required
-                                                    class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 pr-12 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-                                                >
+                        <form
+                            method="POST"
+                            action="{{ route('penimbang.transaksi.selesai-penimbangan', $transaksi->id) }}"
+                            class="mt-5"
+                        >
+                            @csrf
 
-                                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
-                                                    kg
-                                                </span>
-                                            </div>
-                                        </div>
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            >
+                                Selesaikan Penimbangan
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Riwayat timbang --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-zinc-900 dark:text-white">
+                        Riwayat Timbang Bertahap
+                    </h2>
+
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        Setiap baris menunjukkan hasil bongkar satu jenis kertas.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    @forelse ($riwayatTimbang as $riwayat)
+                        <div class="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800">
+                            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
+                                            Timbang {{ $riwayat->urutan_timbang }} - {{ $riwayat->nama_barang }}
+                                        </h3>
+
+                                        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                            Selesai
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                                        Kode: {{ $riwayat->kode_barang }}
+                                    </p>
+
+                                    @if ($riwayat->catatan)
+                                        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                            Catatan: {{ $riwayat->catatan }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <div class="grid gap-3 text-sm sm:grid-cols-3 lg :min-w-[520px]">
+                                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
+                                        <p class="text-zinc-500 dark:text-zinc-400">Sebelum Bongkar</p>
+                                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                                            {{ number_format($riwayat->berat_kotor, 2, ',', '.') }} kg
+                                        </p>
+                                    </div>
+
+                                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
+                                        <p class="text-zinc-500 dark:text-zinc-400">Setelah Bongkar</p>
+                                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                                            {{ number_format($riwayat->tara, 2, ',', '.') }} kg
+                                        </p>
+                                    </div>
+
+                                    <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
+                                        <p class="text-zinc-500 dark:text-zinc-400">Berat Bersih</p>
+                                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                                            {{ number_format($riwayat->berat_bersih, 2, ',', '.') }} kg
+                                        </p>
                                     </div>
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
-                    </div>
+                    @empty
+                        <div class="rounded-2xl border border-dashed border-zinc-300 px-6 py-12 text-center dark:border-zinc-700">
+                            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
+                                Belum ada riwayat timbang
+                            </h3>
 
-                    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                        <a
-                            href="{{ route('penimbang.transaksi.index') }}"
-                            class="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                        >
-                            Batal
-                        </a>
+                            <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                Riwayat akan muncul setelah proses bongkar pertama disimpan.
+                            </p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
 
-                        <button
-                            type="submit"
-                            class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-                        >
-                            Simpan Timbangan Kedua
-                        </button>
-                    </div>
-                </form>
+            {{-- Daftar detail barang --}}
+            <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-zinc-900 dark:text-white">
+                        Daftar Jenis Kertas
+                    </h2>
+
+                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        Total berat bersih akan terisi otomatis setelah jenis kertas selesai ditimbang.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    @foreach ($detailBarang as $detail)
+                        <div class="rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800">
+                            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <h3 class="font-semibold text-zinc-900 dark:text-white">
+                                            {{ $detail->nama_barang }}
+                                        </h3>
+
+                                        @if ($detail->total_berat_bersih > 0)
+                                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                                Sudah Ditimbang
+                                            </span>
+                                        @else
+                                            <span class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                                Belum Ditimbang
+                                            </span>
+                                        @endif
+
+                                        <span class="rounded-full px-3 py-1 text-xs font-medium
+                                            {{ $detail->status_qc === 'sudah_dinilai'
+                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                                : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' }}">
+                                            QC: {{ ucfirst(str_replace('_', ' ', $detail->status_qc)) }}
+                                        </span>
+                                    </div>
+
+                                    <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                                        Kode: {{ $detail->kode_barang }}
+                                    </p>
+                                </div>
+
+                                <div class="text-left md:text-right">
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                                        Berat Bersih
+                                    </p>
+
+                                    <p class="mt-1 text-xl font-bold text-zinc-900 dark:text-white">
+                                        {{ number_format($detail->total_berat_bersih, 2, ',', '.') }} kg
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+    const beratSebelumnyaInput = document.getElementById('berat_sebelumnya');
+    const beratBarangInput = document.getElementById('berat_barang_dibongkar');
+    const previewSisaBerat = document.getElementById('preview_sisa_berat');
+
+    function formatNumberId(value) {
+        return new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+
+    function updatePreviewSisaBerat() {
+        if (!beratSebelumnyaInput || !beratBarangInput || !previewSisaBerat) {
+            return;
+        }
+
+        const beratSebelumnya = parseFloat(beratSebelumnyaInput.value || 0);
+        const beratBarang = parseFloat(beratBarangInput.value || 0);
+        const sisaBerat = Math.max(beratSebelumnya - beratBarang, 0);
+
+        previewSisaBerat.textContent = formatNumberId(sisaBerat);
+    }
+
+    if (beratBarangInput) {
+        beratBarangInput.addEventListener('input', updatePreviewSisaBerat);
+        updatePreviewSisaBerat();
+    }
+    </script>
 </x-layouts::app>

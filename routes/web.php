@@ -465,7 +465,7 @@ Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
     ]);
     })->name('transaksi.timbangan-kedua');
 
-    Route::get('/transaksi/{id}/timbangan-kedua', function ($id) {
+   Route::get('/transaksi/{id}/timbangan-kedua', function ($id) {
     abort_unless(auth()->user()->role === 'penimbang', 403);
 
     $transaksi = DB::table('transaksi_penimbangan as transaksi')
@@ -489,6 +489,7 @@ Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
             'detail.id as detail_id',
             'detail.status_qc',
             'detail.total_berat_bersih',
+            'detail.urutan',
             'kertas.kode_barang',
             'kertas.nama_barang'
         )
@@ -496,19 +497,51 @@ Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
         ->orderBy('detail.urutan')
         ->get();
 
-    $jumlahBelumQc = $detailBarang
-        ->where('status_qc', 'belum_dinilai')
-        ->count();
+    $riwayatTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+        ->select(
+            'riwayat.id',
+            'riwayat.detail_transaksi_barang_id',
+            'riwayat.urutan_timbang',
+            'riwayat.berat_kotor',
+            'riwayat.tara',
+            'riwayat.berat_bersih',
+            'riwayat.waktu_timbang',
+            'riwayat.catatan',
+            'kertas.nama_barang',
+            'kertas.kode_barang'
+        )
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->orderBy('riwayat.urutan_timbang')
+        ->get();
+
+    $detailSudahDitimbangIds = $riwayatTimbang
+        ->pluck('detail_transaksi_barang_id')
+        ->unique()
+        ->values();
+
+    $detailBelumDitimbang = $detailBarang
+        ->whereNotIn('detail_id', $detailSudahDitimbangIds)
+        ->values();
+
+    $beratTerakhir = $riwayatTimbang->isNotEmpty()
+        ? (float) $riwayatTimbang->last()->tara
+        : (float) $transaksi->berat_timbang_pertama;
+
+    $totalBeratBersih = (float) $detailBarang->sum('total_berat_bersih');
 
     return view('penimbang.transaksi.timbangan-kedua', [
         'transaksi' => $transaksi,
         'detailBarang' => $detailBarang,
-        'jumlahBelumQc' => $jumlahBelumQc,
+        'detailBelumDitimbang' => $detailBelumDitimbang,
+        'riwayatTimbang' => $riwayatTimbang,
+        'beratTerakhir' => $beratTerakhir,
+        'totalBeratBersih' => $totalBeratBersih,
     ]);
 })->name('transaksi.timbangan-kedua');
 
-
-Route::put('/transaksi/{id}/timbangan-kedua', function ($id) {
+    Route::post('/transaksi/{id}/timbang-bertahap', function ($id) {
     abort_unless(auth()->user()->role === 'penimbang', 403);
 
     $transaksi = DB::table('transaksi_penimbangan')
@@ -518,100 +551,297 @@ Route::put('/transaksi/{id}/timbangan-kedua', function ($id) {
 
     abort_if(!$transaksi, 404);
 
-    $detailBarang = DB::table('detail_transaksi_barang')
-        ->where('transaksi_id', $transaksi->id)
-        ->get();
-
-    $jumlahBelumQc = $detailBarang
-        ->where('status_qc', 'belum_dinilai')
-        ->count();
-
-    if ($jumlahBelumQc > 0) {
-        return back()
-            ->withInput()
-            ->withErrors([
-                'qc' => 'Timbangan kedua belum bisa disimpan karena masih ada jenis kertas yang belum dinilai QC.',
-            ]);
-    }
-
     request()->validate([
-        'berat_timbang_kedua' => ['required', 'numeric', 'min:0'],
-        'berat_bersih_detail' => ['required', 'array'],
-        'berat_bersih_detail.*' => ['required', 'numeric', 'min:0'],
+        'detail_transaksi_barang_id' => ['required', 'exists:detail_transaksi_barang,id'],
+        'berat_barang_dibongkar' => ['required', 'numeric', 'min:0.01'],
+        'catatan' => ['nullable', 'string'],
     ]);
 
-    $beratTimbangPertama = (float) $transaksi->berat_timbang_pertama;
-    $beratTimbangKedua = (float) request('berat_timbang_kedua');
+    $detail = DB::table('detail_transaksi_barang')
+        ->where('id', request('detail_transaksi_barang_id'))
+        ->where('transaksi_id', $transaksi->id)
+        ->first();
 
-    if ($beratTimbangKedua >= $beratTimbangPertama) {
+    abort_if(!$detail, 404);
+
+    $sudahPernahDitimbang = DB::table('riwayat_penimbangan_barang')
+        ->where('detail_transaksi_barang_id', $detail->id)
+        ->exists();
+
+    if ($sudahPernahDitimbang) {
         return back()
             ->withInput()
             ->withErrors([
-                'berat_timbang_kedua' => 'Berat timbangan kedua harus lebih kecil dari berat timbangan pertama.',
+                'detail_transaksi_barang_id' => 'Jenis kertas ini sudah pernah ditimbang bertahap.',
             ]);
     }
 
-    $totalBeratBersihTransaksi = round($beratTimbangPertama - $beratTimbangKedua, 2);
+    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->orderByDesc('riwayat.urutan_timbang')
+        ->select('riwayat.*')
+        ->first();
 
-    $inputDetail = request('berat_bersih_detail', []);
+    $beratSebelumBongkar = $riwayatTerakhir
+        ? (float) $riwayatTerakhir->tara
+        : (float) $transaksi->berat_timbang_pertama;
 
-    $detailIds = $detailBarang
-        ->pluck('id')
-        ->map(fn ($id) => (string) $id)
-        ->toArray();
+    $beratBarangDibongkar = (float) request('berat_barang_dibongkar');
 
-    foreach ($inputDetail as $detailId => $berat) {
-        if (! in_array((string) $detailId, $detailIds, true)) {
-            abort(403);
-        }
-    }
-
-    $totalInputDetail = round(array_sum(array_map('floatval', $inputDetail)), 2);
-
-    if (abs($totalInputDetail - $totalBeratBersihTransaksi) > 0.05) {
+    if ($beratBarangDibongkar > $beratSebelumBongkar) {
         return back()
             ->withInput()
             ->withErrors([
-                'berat_bersih_detail' => 'Total berat bersih per jenis kertas harus sama dengan total berat bersih transaksi. Total transaksi: '
-                    . number_format($totalBeratBersihTransaksi, 2, ',', '.')
-                    . ' kg, total input: '
-                    . number_format($totalInputDetail, 2, ',', '.')
-                    . ' kg.',
+                'berat_barang_dibongkar' => 'Berat barang yang dibongkar tidak boleh lebih besar dari berat terakhir.',
             ]);
     }
 
-    DB::transaction(function () use ($transaksi, $beratTimbangKedua, $inputDetail) {
-        DB::table('transaksi_penimbangan')
-            ->where('id', $transaksi->id)
+    $beratSetelahBongkar = round($beratSebelumBongkar - $beratBarangDibongkar, 2);
+
+    $urutanTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->count() + 1;
+
+    DB::transaction(function () use (
+        $detail,
+        $urutanTimbang,
+        $beratSebelumBongkar,
+        $beratSetelahBongkar,
+        $beratBarangDibongkar
+    ) {
+        DB::table('riwayat_penimbangan_barang')->insert([
+            'detail_transaksi_barang_id' => $detail->id,
+            'urutan_timbang' => $urutanTimbang,
+
+            // berat_kotor = berat sebelum barang dibongkar
+            // tara = sisa berat setelah barang dibongkar
+            // berat_bersih = berat barang yang dibongkar
+            'berat_kotor' => $beratSebelumBongkar,
+            'tara' => $beratSetelahBongkar,
+            'berat_bersih' => $beratBarangDibongkar,
+
+            'waktu_timbang' => now(),
+            'petugas_timbang_id' => auth()->id(),
+            'catatan' => request('catatan'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('detail_transaksi_barang')
+            ->where('id', $detail->id)
             ->update([
-                'berat_timbang_kedua' => $beratTimbangKedua,
-                'status' => 'menunggu_pembayaran',
+                'total_berat_kotor' => $beratSebelumBongkar,
+                'total_tara' => $beratSetelahBongkar,
+                'total_berat_bersih' => $beratBarangDibongkar,
                 'updated_at' => now(),
             ]);
 
-        foreach ($inputDetail as $detailId => $beratBersih) {
-            DB::table('detail_transaksi_barang')
-                ->where('id', $detailId)
-                ->where('transaksi_id', $transaksi->id)
-                ->update([
-                    'total_berat_bersih' => $beratBersih,
-                    'updated_at' => now(),
-                ]);
-
-            DB::table('qc_penilaian')
-                ->where('detail_transaksi_barang_id', $detailId)
-                ->update([
-                    'nilai_berat_bersih' => $beratBersih,
-                    'updated_at' => now(),
-                ]);
-        }
+        DB::table('qc_penilaian')
+            ->where('detail_transaksi_barang_id', $detail->id)
+            ->update([
+                'nilai_berat_bersih' => $beratBarangDibongkar,
+                'updated_at' => now(),
+            ]);
     });
 
     return redirect()
-        ->route('penimbang.transaksi.index')
-        ->with('success', 'Timbangan kedua berhasil disimpan. Transaksi masuk ke tahap menunggu pembayaran.');
-    })->name('transaksi.timbangan-kedua.update');
+        ->route('penimbang.transaksi.timbangan-kedua', $transaksi->id)
+        ->with('success', 'Timbang bertahap berhasil disimpan.');
+    })->name('transaksi.timbang-bertahap.store');
 
+Route::post('/transaksi/{id}/selesai-penimbangan', function ($id) {
+    abort_unless(auth()->user()->role === 'penimbang', 403);
+
+    $transaksi = DB::table('transaksi_penimbangan')
+        ->where('id', $id)
+        ->where('petugas_timbang_id', auth()->id())
+        ->first();
+
+    abort_if(!$transaksi, 404);
+
+    $totalDetail = DB::table('detail_transaksi_barang')
+        ->where('transaksi_id', $transaksi->id)
+        ->count();
+
+    $totalSudahDitimbang = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->distinct()
+        ->count('detail.id');
+
+    if ($totalDetail === 0 || $totalSudahDitimbang < $totalDetail) {
+        return back()->withErrors([
+            'selesai' => 'Penimbangan belum bisa diselesaikan karena masih ada jenis kertas yang belum ditimbang.',
+        ]);
+    }
+
+    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->orderByDesc('riwayat.urutan_timbang')
+        ->select('riwayat.*')
+        ->first();
+
+    abort_if(!$riwayatTerakhir, 404);
+
+    DB::table('transaksi_penimbangan')
+        ->where('id', $transaksi->id)
+        ->update([
+            // Timbangan terakhir dianggap sebagai berat kendaraan kosong
+            'berat_timbang_kedua' => $riwayatTerakhir->tara,
+            'status' => 'menunggu_pembayaran',
+            'updated_at' => now(),
+        ]);
+
+        app(\App\Services\FuzzyTsukamotoService::class)
+        ->hitungTransaksiJikaSiap((int) $transaksi->id);
+
+    return redirect()
+        ->route('penimbang.transaksi.index')
+        ->with('success', 'Penimbangan bertahap selesai. Transaksi masuk ke tahap pembayaran.');
+})->name('transaksi.selesai-penimbangan');
+
+    Route::get('/transaksi/{id}/detail', function ($id) {
+    abort_unless(auth()->user()->role === 'penimbang', 403);
+
+    $transaksi = DB::table('transaksi_penimbangan as transaksi')
+        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+        ->select(
+            'transaksi.*',
+            'pelanggan.kode_pelanggan',
+            'pelanggan.nama_pelanggan',
+            'pelanggan.no_hp',
+            'pelanggan.alamat',
+            'kendaraan.nama_kendaraan'
+        )
+        ->where('transaksi.id', $id)
+        ->where('transaksi.petugas_timbang_id', auth()->id())
+        ->first();
+
+    abort_if(!$transaksi, 404);
+
+    $detailBarang = DB::table('detail_transaksi_barang as detail')
+        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+        ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
+        ->select(
+            'detail.id as detail_id',
+            'detail.keterangan_barang',
+            'detail.total_berat_kotor',
+            'detail.total_tara',
+            'detail.total_berat_bersih',
+            'detail.status_qc',
+            'detail.urutan',
+            'kertas.kode_barang',
+            'kertas.nama_barang',
+            'qc.id as qc_id',
+            'qc.nilai_kualitas_kertas',
+            'qc.catatan as catatan_qc',
+            'qc.waktu_qc'
+        )
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->orderBy('detail.urutan')
+        ->get();
+
+    $riwayatTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+        ->select(
+            'riwayat.id',
+            'riwayat.detail_transaksi_barang_id',
+            'riwayat.urutan_timbang',
+            'riwayat.berat_kotor',
+            'riwayat.tara',
+            'riwayat.berat_bersih',
+            'riwayat.waktu_timbang',
+            'riwayat.catatan',
+            'kertas.kode_barang',
+            'kertas.nama_barang'
+        )
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->orderBy('riwayat.urutan_timbang')
+        ->get();
+
+    $riwayatByDetail = $riwayatTimbang->groupBy('detail_transaksi_barang_id');
+
+    $summary = [
+        'jumlah_jenis' => $detailBarang->count(),
+        'total_berat_bersih' => $detailBarang->sum('total_berat_bersih'),
+        'sudah_qc' => $detailBarang->where('status_qc', 'sudah_dinilai')->count(),
+        'belum_qc' => $detailBarang->where('status_qc', 'belum_dinilai')->count(),
+        'jumlah_timbang' => $riwayatTimbang->count(),
+    ];
+
+    return view('penimbang.transaksi.show', [
+        'transaksi' => $transaksi,
+        'detailBarang' => $detailBarang,
+        'riwayatTimbang' => $riwayatTimbang,
+        'riwayatByDetail' => $riwayatByDetail,
+        'summary' => $summary,
+    ]);
+    })->name('transaksi.show');
+
+    Route::post('/transaksi/{id}/hitung-fuzzy', function ($id, \App\Services\FuzzyTsukamotoService $fuzzyService) {
+    abort_unless(auth()->user()->role === 'penimbang', 403);
+
+    $transaksi = DB::table('transaksi_penimbangan')
+        ->where('id', $id)
+        ->where('petugas_timbang_id', auth()->id())
+        ->first();
+
+    abort_if(!$transaksi, 404);
+
+    $detailBarang = DB::table('detail_transaksi_barang as detail')
+        ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
+        ->leftJoin('fuzzy_hasil as fuzzy', 'fuzzy.detail_transaksi_barang_id', '=', 'detail.id')
+        ->select(
+            'detail.id',
+            'detail.total_berat_bersih',
+            'detail.status_qc',
+            'qc.id as qc_id',
+            'qc.nilai_kualitas_kertas',
+            'fuzzy.id as fuzzy_id',
+            'fuzzy.nilai_bobot_ketidaklayakan',
+            'fuzzy.persentase_potongan',
+            'fuzzy.potongan_berat',
+            'fuzzy.berat_layak'
+        )
+        ->where('detail.transaksi_id', $transaksi->id)
+        ->get();
+
+    if ($detailBarang->count() === 0) {
+        return back()->withErrors([
+            'fuzzy' => 'Detail jenis kertas belum tersedia.',
+        ]);
+    }
+
+    $belumSiap = $detailBarang->filter(function ($detail) {
+        return $detail->total_berat_bersih <= 0
+            || ! $detail->qc_id
+            || $detail->nilai_kualitas_kertas <= 0
+            || $detail->status_qc !== 'sudah_dinilai';
+    });
+
+    if ($belumSiap->count() > 0) {
+        return back()->withErrors([
+            'fuzzy' => 'Fuzzy belum bisa dihitung. Pastikan semua jenis kertas sudah ditimbang dan sudah dinilai QC.',
+        ]);
+    }
+
+    $berhasil = 0;
+
+    foreach ($detailBarang as $detail) {
+        $fuzzyService->hitungDetail((int) $detail->id);
+        $berhasil++;
+    }
+    
+
+    return redirect()
+        ->route('penimbang.transaksi.show', $transaksi->id)
+        ->with('success', "Perhitungan fuzzy berhasil dilakukan untuk {$berhasil} jenis kertas.");
+    })->name('transaksi.hitung-fuzzy');
 
     });
 
@@ -723,10 +953,19 @@ Route::put('/riwayat/{qcId}', function ($qcId) {
             'updated_at' => now(),
         ]);
 
+        $qcTerbaru = DB::table('qc_penilaian')
+    ->where('id', $qcId)
+    ->first();
+
+        if ($qcTerbaru) {
+        app(\App\Services\FuzzyTsukamotoService::class)
+        ->hitungDetailJikaSiap((int) $qcTerbaru->detail_transaksi_barang_id);
+}
+
     return redirect()
         ->route('qc.riwayat.index')
         ->with('success', 'Riwayat penilaian QC berhasil diperbarui.');
-})->name('riwayat.update');
+        })->name('riwayat.update');
 
         Route::get('/penilaian/{detailId}/create', function ($detailId) {
     abort_unless(auth()->user()->role === 'qc', 403);
@@ -821,11 +1060,13 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                 'updated_at' => now(),
             ]);
     });
+            app(\App\Services\FuzzyTsukamotoService::class)
+            ->hitungDetailJikaSiap((int) $detailId);
 
-    return redirect()
-        ->route('qc.penilaian.index')
-        ->with('success', 'Penilaian QC berhasil disimpan.');
-})->name('penilaian.store');
+            return redirect()
+                ->route('qc.penilaian.index')
+                ->with('success', 'Penilaian QC berhasil disimpan.');
+        })->name('penilaian.store');
 
        Route::get('/dashboard', function () {
             abort_unless(auth()->user()->role === 'qc', 403);
@@ -941,5 +1182,90 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                 'summary' => $summary,
             ]);
         })->name('penilaian.index');
+
+        Route::get('/fuzzy', function () {
+    abort_unless(auth()->user()->role === 'qc', 403);
+
+    $keyword = request('q');
+
+    $query = DB::table('fuzzy_hasil as fuzzy')
+        ->join('detail_transaksi_barang as detail', 'fuzzy.detail_transaksi_barang_id', '=', 'detail.id')
+        ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+        ->join('qc_penilaian as qc', 'fuzzy.qc_penilaian_id', '=', 'qc.id')
+        ->select(
+            'fuzzy.id as fuzzy_id',
+            'fuzzy.nilai_bobot_ketidaklayakan',
+            'fuzzy.persentase_potongan',
+            'fuzzy.potongan_berat',
+            'fuzzy.berat_layak',
+            'fuzzy.created_at',
+            'detail.total_berat_bersih',
+            'transaksi.kode_transaksi',
+            'pelanggan.nama_pelanggan',
+            'kertas.nama_barang',
+            'kertas.kode_barang',
+            'qc.nilai_kualitas_kertas'
+        )
+        ->orderByDesc('fuzzy.created_at');
+
+    if ($keyword) {
+        $query->where(function ($q) use ($keyword) {
+            $q->where('transaksi.kode_transaksi', 'like', "%{$keyword}%")
+                ->orWhere('pelanggan.nama_pelanggan', 'like', "%{$keyword}%")
+                ->orWhere('kertas.nama_barang', 'like', "%{$keyword}%");
+        });
+    }
+
+    $hasilFuzzy = $query->paginate(8)->withQueryString();
+
+    return view('qc.fuzzy.index', [
+        'hasilFuzzy' => $hasilFuzzy,
+        'keyword' => $keyword,
+    ]);
+})->name('fuzzy.index');
+
+
+Route::get('/fuzzy/{fuzzyId}', function ($fuzzyId) {
+    abort_unless(auth()->user()->role === 'qc', 403);
+
+    $hasil = DB::table('fuzzy_hasil as fuzzy')
+        ->join('detail_transaksi_barang as detail', 'fuzzy.detail_transaksi_barang_id', '=', 'detail.id')
+        ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+        ->join('qc_penilaian as qc', 'fuzzy.qc_penilaian_id', '=', 'qc.id')
+        ->select(
+            'fuzzy.*',
+            'detail.total_berat_kotor',
+            'detail.total_tara',
+            'detail.total_berat_bersih',
+            'transaksi.kode_transaksi',
+            'transaksi.berat_timbang_pertama',
+            'transaksi.berat_timbang_kedua',
+            'pelanggan.nama_pelanggan',
+            'kertas.nama_barang',
+            'kertas.kode_barang',
+            'kendaraan.nama_kendaraan',
+            'qc.nilai_jenis_kendaraan',
+            'qc.nilai_berat_kotor',
+            'qc.nilai_berat_bersih',
+            'qc.nilai_kualitas_kertas',
+            'qc.catatan as catatan_qc'
+        )
+        ->where('fuzzy.id', $fuzzyId)
+        ->first();
+
+    abort_if(!$hasil, 404);
+
+    $perhitungan = json_decode($hasil->detail_perhitungan ?? '{}', true) ?: [];
+
+    return view('qc.fuzzy.show', [
+        'hasil' => $hasil,
+        'perhitungan' => $perhitungan,
+    ]);
+    })->name('fuzzy.show');
 
     });
