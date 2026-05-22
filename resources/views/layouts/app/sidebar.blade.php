@@ -104,23 +104,25 @@
 
                             <flux:navlist.item
                                 icon="banknotes"
-                                href="#"
+                                :href="route('kasir.pembayaran.index')"
+                                :current="request()->routeIs('kasir.pembayaran.*')"
                                 wire:navigate
                             >
                                 Pembayaran
                             </flux:navlist.item>
-
                             <flux:navlist.item
-                                icon="wallet"
-                                href="#"
+                                icon="credit-card"
+                                :href="route('kasir.kasbon.index')"
+                                :current="request()->routeIs('kasir.kasbon.*')"
                                 wire:navigate
                             >
                                 Kasbon / Hutang
                             </flux:navlist.item>
 
-                            <flux:navlist.item
+                           <flux:navlist.item
                                 icon="document-chart-bar"
-                                href="#"
+                                :href="route('kasir.laporan.index')"
+                                :current="request()->routeIs('kasir.laporan.*')"
                                 wire:navigate
                             >
                                 Laporan
