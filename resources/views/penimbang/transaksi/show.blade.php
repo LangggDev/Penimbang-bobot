@@ -28,6 +28,16 @@
                         </a>
                     @endif
 
+                        @if (in_array($transaksi->status, ['menunggu_qc', 'menunggu_pembayaran', 'selesai']))
+                            <a
+                                href="{{ route('penimbang.transaksi.print-antrian', $transaksi->id) }}"
+                                target="_blank"
+                                class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
+                            >
+                                Print Nomor Antrian
+                            </a>
+                        @endif
+
                     <a
                         href="{{ route('penimbang.transaksi.index') }}"
                         class="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"

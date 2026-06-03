@@ -635,13 +635,7 @@ Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
                 'total_berat_kotor' => $beratSebelumBongkar,
                 'total_tara' => $beratSetelahBongkar,
                 'total_berat_bersih' => $beratBarangDibongkar,
-                'updated_at' => now(),
-            ]);
 
-        DB::table('qc_penilaian')
-            ->where('detail_transaksi_barang_id', $detail->id)
-            ->update([
-                'nilai_berat_bersih' => $beratBarangDibongkar,
                 'updated_at' => now(),
             ]);
     });
@@ -652,49 +646,83 @@ Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
     })->name('transaksi.timbang-bertahap.store');
 
 Route::post('/transaksi/{id}/selesai-penimbangan', function ($id) {
+    abort_unless(auth()->user()->role === 'penimbang', 403);
+
     $transaksi = DB::table('transaksi_penimbangan')
         ->where('id', $id)
+        ->where('petugas_timbang_id', auth()->id())
         ->first();
 
     abort_if(!$transaksi, 404);
 
-    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang')
-        ->where('transaksi_id', $transaksi->id)
-        ->orderByDesc('urutan_timbang')
-        ->first();
-
-    $adaDetailBelumAdaBerat = DB::table('detail_transaksi_barang')
+    // Cek jika ada detail yang belum ditimbang
+// Patokan: total_berat_bersih <= 0 berarti belum ditimbang
+$adaDetailBelumDitimbang = DB::table('detail_transaksi_barang')
     ->where('transaksi_id', $transaksi->id)
     ->where('total_berat_bersih', '<=', 0)
     ->exists();
 
-if ($adaDetailBelumAdaBerat) {
-    $statusBerikutnya = 'draft_penimbangan';
-} else {
-    $masihButuhQc = DB::table('detail_transaksi_barang as detail')
-        ->leftJoin('fuzzy_hasil as fuzzy', 'detail.id', '=', 'fuzzy.detail_transaksi_barang_id')
+if ($adaDetailBelumDitimbang) {
+    return back()
+        ->withErrors(['selesai' => 'Semua jenis kertas harus sudah ditimbang sebelum menyelesaikan penimbangan.'])
+        ->withInput();
+};
+    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
+        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
         ->where('detail.transaksi_id', $transaksi->id)
-        ->where('detail.total_berat_bersih', '>', 100)
-        ->whereNull('fuzzy.id')
+        ->orderByDesc('riwayat.urutan_timbang')
+        ->select('riwayat.*')
+        ->first();
+
+    // Check apakah ada barang dengan berat > 100 kg (perlu QC)
+    $adaBarangMasukQc = DB::table('detail_transaksi_barang')
+        ->where('transaksi_id', $transaksi->id)
+        ->where('total_berat_bersih', '>', 100)
         ->exists();
 
-    $statusBerikutnya = $masihButuhQc ? 'menunggu_qc' : 'menunggu_pembayaran';
+    // Check apakah ada barang dengan berat <= 100 kg (tidak perlu QC)
+    $adaBarangTidakMasukQc = DB::table('detail_transaksi_barang')
+        ->where('transaksi_id', $transaksi->id)
+        ->where('total_berat_bersih', '<=', 100)
+        ->exists();
+
+    // Tentukan status transaksi
+    if ($adaBarangMasukQc) {
+        $statusBerikutnya = 'menunggu_qc';
+        // Set status_qc = 'belum_dinilai' untuk barang > 100 kg
+        DB::table('detail_transaksi_barang')
+            ->where('transaksi_id', $transaksi->id)
+            ->where('total_berat_bersih', '>', 100)
+            ->update(['status_qc' => 'belum_dinilai']);
+    } elseif ($adaBarangTidakMasukQc) {
+        $statusBerikutnya = 'menunggu_pembayaran';
+    } else {
+        $statusBerikutnya = 'menunggu_pembayaran';
     }
 
-DB::table('transaksi_penimbangan')
-    ->where('id', $transaksi->id)
-    ->update([
-        'berat_timbang_kedua' => $riwayatTerakhir ? $riwayatTerakhir->tara : 0,
-        'status' => $statusBerikutnya,
-        'updated_at' => now(),
-    ]);
+    DB::transaction(function () use ($transaksi, $riwayatTerakhir, $statusBerikutnya) {
+        DB::table('transaksi_penimbangan')
+            ->where('id', $transaksi->id)
+            ->update([
+                'berat_timbang_kedua' => $riwayatTerakhir ? $riwayatTerakhir->tara : 0,
+                'status' => $statusBerikutnya,
+                'updated_at' => now(),
+            ]);
+    });
 
+    // Hitung fuzzy jika ada barang masuk QC
+    if ($adaBarangMasukQc) {
         app(\App\Services\FuzzyTsukamotoService::class)
-        ->hitungTransaksiJikaSiap((int) $transaksi->id);
+            ->hitungTransaksiJikaSiap((int) $transaksi->id);
+    }
+
+    $pesan = $adaBarangMasukQc
+        ? 'Penimbangan selesai. Barang dengan berat > 100 kg siap masuk QC.'
+        : 'Penimbangan selesai. Semua barang siap masuk pembayaran.';
 
     return redirect()
         ->route('penimbang.transaksi.index')
-        ->with('success', 'Penimbangan bertahap selesai. Transaksi masuk ke tahap pembayaran.');
+        ->with('success', $pesan);
 })->name('transaksi.selesai-penimbangan');
 
     Route::get('/transaksi/{id}/detail', function ($id) {
@@ -836,6 +864,105 @@ DB::table('transaksi_penimbangan')
         ->route('penimbang.transaksi.show', $transaksi->id)
         ->with('success', "Perhitungan fuzzy berhasil dilakukan untuk {$berhasil} jenis kertas.");
     })->name('transaksi.hitung-fuzzy');
+
+    Route::get('/dashboard', function () {
+        abort_unless(auth()->user()->role === 'penimbang', 403);
+
+        $tanggalMulai = request('tanggal_mulai', now()->toDateString());
+        $tanggalSelesai = request('tanggal_selesai', now()->toDateString());
+
+        // Total Transaksi
+        $totalTransaksiHariIni = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Berat Bersih
+        $totalBeratBersihHariIni = DB::table('detail_transaksi_barang as detail')
+            ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+            ->where('transaksi.petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('detail.total_berat_bersih') ?? 0;
+
+        // Total Draft
+        $totalDraft = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->where('status', 'draft_penimbangan')
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Menunggu QC
+        $totalMenungguQc = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->where('status', 'menunggu_qc')
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Transaksi Terbaru (untuk periode yang dipilih)
+        $transaksiTerbaru = DB::table('transaksi_penimbangan as transaksi')
+            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+            ->join('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
+            ->select(
+                'transaksi.id',
+                'transaksi.kode_transaksi',
+                'transaksi.tanggal_transaksi',
+                'transaksi.status',
+                'pelanggan.nama_pelanggan',
+                'jenis_kendaraan.nama_kendaraan'
+            )
+            ->where('transaksi.petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->orderByDesc('transaksi.tanggal_transaksi')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.penimbang', [
+            'totalTransaksiHariIni' => $totalTransaksiHariIni,
+            'totalBeratBersihHariIni' => $totalBeratBersihHariIni,
+            'totalDraft' => $totalDraft,
+            'totalMenungguQc' => $totalMenungguQc,
+            'transaksiTerbaru' => $transaksiTerbaru,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalSelesai' => $tanggalSelesai,
+        ]);
+    })->name('dashboard');
+    Route::get('/transaksi/{id}/print-antrian', function ($id) {
+    abort_unless(auth()->user()->role === 'penimbang', 403);
+
+    $transaksi = DB::table('transaksi_penimbangan as transaksi')
+        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+        ->select(
+            'transaksi.*',
+            'pelanggan.nama_pelanggan',
+            'pelanggan.no_hp',
+            'pelanggan.alamat',
+            'kendaraan.nama_kendaraan'
+        )
+        ->where('transaksi.id', $id)
+        ->first();
+
+    abort_if(!$transaksi, 404);
+
+    $totalBeratBersih = DB::table('detail_transaksi_barang')
+        ->where('transaksi_id', $transaksi->id)
+        ->sum('total_berat_bersih');
+
+    $tanggalTransaksi = \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->toDateString();
+
+    $urutanHariIni = DB::table('transaksi_penimbangan')
+        ->whereDate('tanggal_transaksi', $tanggalTransaksi)
+        ->where('id', '<=', $transaksi->id)
+        ->count();
+
+    $nomorAntrian = sprintf('%03d', $urutanHariIni);
+
+    return view('penimbang.transaksi.print-antrian', [
+        'transaksi' => $transaksi,
+        'totalBeratBersih' => $totalBeratBersih,
+        'nomorAntrian' => $nomorAntrian,
+    ]);
+})->name('transaksi.print-antrian');
 
     });
 
@@ -1084,11 +1211,13 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
        Route::get('/dashboard', function () {
             abort_unless(auth()->user()->role === 'qc', 403);
 
+            $tanggalMulai = request('tanggal_mulai', now()->toDateString());
+            $tanggalSelesai = request('tanggal_selesai', now()->toDateString());
+
             $summary = [
                 'menunggu' => DB::table('detail_transaksi_barang as detail')
                     ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
                     ->whereIn('transaksi.status', [
-                        'draft_penimbangan',
                         'menunggu_qc',
                         'proses_qc',
                     ])
@@ -1096,12 +1225,18 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                     ->where('detail.total_berat_bersih', '>', 100)
                     ->count(),
 
-                'sudah_dinilai' => DB::table('detail_transaksi_barang')
-                    ->where('status_qc', 'sudah_dinilai')
+                'sudah_dinilai' => DB::table('detail_transaksi_barang as detail')
+                    ->join('qc_penilaian as qc', 'detail.id', '=', 'qc.detail_transaksi_barang_id')
+                    ->where('detail.status_qc', 'sudah_dinilai')
+                    ->where('detail.total_berat_bersih', '>', 100)
+                    ->whereBetween(DB::raw('DATE(qc.waktu_qc)'), [$tanggalMulai, $tanggalSelesai])
                     ->count(),
 
-                'revisi' => DB::table('detail_transaksi_barang')
-                    ->where('status_qc', 'revisi')
+                'revisi' => DB::table('detail_transaksi_barang as detail')
+                    ->join('qc_penilaian as qc', 'detail.id', '=', 'qc.detail_transaksi_barang_id')
+                    ->where('detail.status_qc', 'revisi')
+                    ->where('detail.total_berat_bersih', '>', 100)
+                    ->whereBetween(DB::raw('DATE(qc.waktu_qc)'), [$tanggalMulai, $tanggalSelesai])
                     ->count(),
             ];
 
@@ -1121,7 +1256,6 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                     'kendaraan.nama_kendaraan'
                 )
                 ->whereIn('transaksi.status', [
-                    'draft_penimbangan',
                     'menunggu_qc',
                     'proses_qc',
                 ])
@@ -1134,6 +1268,8 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
             return view('dashboard.qc', [
                 'summary' => $summary,
                 'detailTerbaru' => $detailTerbaru,
+                'tanggalMulai' => $tanggalMulai,
+                'tanggalSelesai' => $tanggalSelesai,
             ]);
         })->name('dashboard');
 
@@ -1163,7 +1299,6 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                     'kendaraan.nama_kendaraan',
                 )
                 ->whereIn('transaksi.status', [
-                    'draft_penimbangan',
                     'menunggu_qc',
                     'proses_qc',
                 ])
@@ -1177,23 +1312,33 @@ Route::post('/penilaian/{detailId}', function ($detailId) {
                 'menunggu' => DB::table('detail_transaksi_barang as detail')
                     ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
                     ->whereIn('transaksi.status', [
-                        'draft_penimbangan',
                         'menunggu_qc',
                         'proses_qc',
                     ])
-                    
                     ->where('detail.status_qc', 'belum_dinilai')
                     ->where('detail.total_berat_bersih', '>', 100)
                     ->count(),
 
-                'sudah_dinilai' => DB::table('detail_transaksi_barang')
-                    ->where('status_qc', 'sudah_dinilai')
-                     ->where('total_berat_bersih', '>', 100)
+                'sudah_dinilai' => DB::table('detail_transaksi_barang as detail')
+                    ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+                    ->whereIn('transaksi.status', [
+                        'menunggu_qc',
+                        'proses_qc',
+                        'menunggu_pembayaran',
+                    ])
+                    ->where('detail.status_qc', 'sudah_dinilai')
+                    ->where('detail.total_berat_bersih', '>', 100)
                     ->count(),
 
-                'revisi' => DB::table('detail_transaksi_barang')
-                    ->where('status_qc', 'revisi')
-                     ->where('total_berat_bersih', '>', 100)
+                'revisi' => DB::table('detail_transaksi_barang as detail')
+                    ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+                    ->whereIn('transaksi.status', [
+                        'menunggu_qc',
+                        'proses_qc',
+                        'menunggu_pembayaran',
+                    ])
+                    ->where('detail.status_qc', 'revisi')
+                    ->where('detail.total_berat_bersih', '>', 100)
                     ->count(),
             ];
 
@@ -2109,5 +2254,150 @@ Route::delete('/kasbon/{id}', function ($id) {
         'tanggalAkhir' => $tanggalAkhir,
     ]);
     })->name('laporan.index');
+
+    Route::get('/dashboard', function () {
+        abort_unless(auth()->user()->role === 'kasir', 403);
+
+        $tanggalMulai = request('tanggal_mulai', now()->toDateString());
+        $tanggalSelesai = request('tanggal_selesai', now()->toDateString());
+
+        // Total Pembayaran
+        $totalPembayaran = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Dibayar Ke Pelanggan
+        $totalDibayarKePelanggan = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('total_dibayar_ke_pelanggan') ?? 0;
+
+        // Total Kasbon
+        $totalKasbon = DB::table('hutang_pelanggan')
+            ->whereBetween(DB::raw('DATE(tanggal_hutang)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Potongan Kasbon
+        $totalPotonganKasbon = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('potongan_kasbon') ?? 0;
+
+        // Pembayaran Terbaru (untuk periode yang dipilih)
+        $pembayaranTerbaru = DB::table('pembayaran as bayar')
+            ->join('transaksi_penimbangan as transaksi', 'bayar.transaksi_id', '=', 'transaksi.id')
+            ->join('pelanggan', 'bayar.pelanggan_id', '=', 'pelanggan.id')
+            ->select(
+                'bayar.id',
+                'bayar.kode_pembayaran',
+                'bayar.tanggal_bayar',
+                'bayar.total_transaksi',
+                'bayar.total_dibayar_ke_pelanggan',
+                'transaksi.kode_transaksi',
+                'pelanggan.nama_pelanggan'
+            )
+            ->whereBetween(DB::raw('DATE(bayar.tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->orderByDesc('bayar.tanggal_bayar')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.kasir', [
+            'totalPembayaran' => $totalPembayaran,
+            'totalDibayarKePelanggan' => $totalDibayarKePelanggan,
+            'totalKasbon' => $totalKasbon,
+            'totalPotonganKasbon' => $totalPotonganKasbon,
+            'pembayaranTerbaru' => $pembayaranTerbaru,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalSelesai' => $tanggalSelesai,
+        ]);
+    })->name('dashboard');
+
+    Route::get('/laporan/pembayaran/{id}', function ($id) {
+    abort_unless(auth()->user()->role === 'kasir', 403);
+
+    $pembayaran = DB::table('pembayaran')
+        ->join('transaksi_penimbangan as transaksi', 'pembayaran.transaksi_id', '=', 'transaksi.id')
+        ->join('pelanggan', 'pembayaran.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+        ->select(
+            'pembayaran.*',
+            'pembayaran.id as pembayaran_id',
+            'transaksi.kode_transaksi',
+            'transaksi.tanggal_transaksi',
+            'transaksi.plat_kendaraan',
+            'pelanggan.nama_pelanggan',
+            'pelanggan.no_hp',
+            'pelanggan.alamat',
+            'kendaraan.nama_kendaraan'
+        )
+        ->where('pembayaran.id', $id)
+        ->first();
+
+    abort_if(!$pembayaran, 404);
+
+    $detailBarang = DB::table('detail_pembayaran_barang as detail_bayar')
+        ->join('detail_transaksi_barang as detail_transaksi', 'detail_bayar.detail_transaksi_barang_id', '=', 'detail_transaksi.id')
+        ->join('jenis_kertas_bekas as barang', 'detail_transaksi.jenis_kertas_bekas_id', '=', 'barang.id')
+        ->select(
+            'barang.nama_barang',
+            'detail_bayar.berat_bersih',
+            'detail_bayar.persentase_potongan',
+            'detail_bayar.potongan_berat',
+            'detail_bayar.berat_layak',
+            'detail_bayar.harga_per_kg',
+            'detail_bayar.subtotal'
+        )
+        ->where('detail_bayar.pembayaran_id', $pembayaran->id)
+        ->orderBy('detail_transaksi.urutan')
+        ->get();
+
+    return view('kasir.laporan.detail', [
+        'pembayaran' => $pembayaran,
+        'detailBarang' => $detailBarang,
+    ]);
+    })->name('laporan.detail');
+
+    Route::get('/laporan/pembayaran/{id}/print', function ($id) {
+    abort_unless(auth()->user()->role === 'kasir', 403);
+
+    $pembayaran = DB::table('pembayaran')
+        ->join('transaksi_penimbangan as transaksi', 'pembayaran.transaksi_id', '=', 'transaksi.id')
+        ->join('pelanggan', 'pembayaran.pelanggan_id', '=', 'pelanggan.id')
+        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+        ->select(
+            'pembayaran.*',
+            'pembayaran.id as pembayaran_id',
+            'transaksi.kode_transaksi',
+            'transaksi.tanggal_transaksi',
+            'transaksi.plat_kendaraan',
+            'pelanggan.nama_pelanggan',
+            'pelanggan.no_hp',
+            'pelanggan.alamat',
+            'kendaraan.nama_kendaraan'
+        )
+        ->where('pembayaran.id', $id)
+        ->first();
+
+    abort_if(!$pembayaran, 404);
+
+    $detailBarang = DB::table('detail_pembayaran_barang as detail_bayar')
+        ->join('detail_transaksi_barang as detail_transaksi', 'detail_bayar.detail_transaksi_barang_id', '=', 'detail_transaksi.id')
+        ->join('jenis_kertas_bekas as barang', 'detail_transaksi.jenis_kertas_bekas_id', '=', 'barang.id')
+        ->select(
+            'barang.nama_barang',
+            'detail_bayar.berat_bersih',
+            'detail_bayar.persentase_potongan',
+            'detail_bayar.potongan_berat',
+            'detail_bayar.berat_layak',
+            'detail_bayar.harga_per_kg',
+            'detail_bayar.subtotal'
+        )
+        ->where('detail_bayar.pembayaran_id', $pembayaran->id)
+        ->orderBy('detail_transaksi.urutan')
+        ->get();
+
+    return view('kasir.laporan.print', [
+        'pembayaran' => $pembayaran,
+        'detailBarang' => $detailBarang,
+    ]);
+    })->name('laporan.print');
 
     });

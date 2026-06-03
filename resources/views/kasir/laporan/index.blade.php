@@ -125,92 +125,103 @@
                 <div class="overflow-x-auto">
                     <table class="w-full min-w -[1100px] border-collapse text-left text-sm">
                         <thead>
-                            <tr class="border-b border-zinc-200 dark:border-zinc-800">
-                                <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Tanggal</th>
-                                <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Kode Bayar</th>
-                                <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Transaksi</th>
-                                <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Pelanggan</th>
-                                <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Berat Layak</th>
-                                <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Total Transaksi</th>
-                                <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Potongan Kasbon</th>
-                                <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Dibayar</th>
-                                <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Metode</th>
-                            </tr>
-                        </thead>
+    <tr class="border-b border-zinc-200 dark:border-zinc-800">
+        <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Tanggal</th>
+        <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Kode Bayar</th>
+        <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Transaksi</th>
+        <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Pelanggan</th>
+        <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Berat Layak</th>
+        <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Total Transaksi</th>
+        <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Potongan Kasbon</th>
+        <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Dibayar</th>
+        <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Metode</th>
+        <th class="px-4 py-3 text-left font-semibold text-zinc-700 print:hidden dark:text-zinc-300">Aksi</th>
+    </tr>
+</thead>
 
-                        <tbody>
-                            @forelse ($pembayaran as $item)
-                                <tr class="border-b border-zinc-100 dark:border-zinc-800">
-                                    <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                                        {{ \Carbon\Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') }}
-                                    </td>
+<tbody>
+    @forelse ($pembayaran as $item)
+        <tr class="border-b border-zinc-100 dark:border-zinc-800">
+            <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
+                {{ \Carbon\Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') }}
+            </td>
 
-                                    <td class="px-4 py-4 font-medium text-zinc-900 dark:text-white">
-                                        {{ $item->kode_pembayaran }}
-                                    </td>
+            <td class="px-4 py-4 font-medium text-zinc-900 dark:text-white">
+                {{ $item->kode_pembayaran }}
+            </td>
 
-                                    <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                                        {{ $item->kode_transaksi }}
-                                    </td>
+            <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
+                {{ $item->kode_transaksi }}
+            </td>
 
-                                    <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                                        {{ $item->nama_pelanggan }}
-                                    </td>
+            <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
+                {{ $item->nama_pelanggan }}
+            </td>
 
-                                    <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
-                                        {{ number_format($item->total_berat_layak, 2, ',', '.') }} kg
-                                    </td>
+            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+                {{ number_format($item->total_berat_layak, 2, ',', '.') }} kg
+            </td>
 
-                                    <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
-                                        Rp{{ number_format($item->total_transaksi, 0, ',', '.') }}
-                                    </td>
+            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+                Rp{{ number_format($item->total_transaksi, 0, ',', '.') }}
+            </td>
 
-                                    <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
-                                        Rp{{ number_format($item->potongan_kasbon, 0, ',', '.') }}
-                                    </td>
+            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+                Rp{{ number_format($item->potongan_kasbon, 0, ',', '.') }}
+            </td>
 
-                                    <td class="px-4 py-4 text-right font-semibold text-zinc-900 dark:text-white">
-                                        Rp{{ number_format($item->total_dibayar_ke_pelanggan, 0, ',', '.') }}
-                                    </td>
+            <td class="px-4 py-4 text-right font-semibold text-zinc-900 dark:text-white">
+                Rp{{ number_format($item->total_dibayar_ke_pelanggan, 0, ',', '.') }}
+            </td>
 
-                                    <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                                        {{ ucfirst($item->metode_pembayaran) }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="px-4 py-14 text-center text-zinc-500 dark:text-zinc-400">
-                                        Belum ada data pembayaran pada periode ini.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+            <td class="px-4 py-4 text-zinc-600 dark:text-zinc-400">
+                {{ ucfirst($item->metode_pembayaran) }}
+            </td>
 
-                        <tfoot>
-                            <tr class="border-t border-zinc-300 font-semibold dark:border-zinc-700">
-                                <td colspan="4" class="px-4 py-4 text-zinc-900 dark:text-white">
-                                    Total
-                                </td>
+            <td class="px-4 py-4 print:hidden">
+                <a
+                    href="{{ route('kasir.laporan.detail', $item->id) }}"
+                    class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                    Detail
+                </a>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="10" class="px-4 py-14 text-center text-zinc-500 dark:text-zinc-400">
+                Belum ada data pembayaran pada periode ini.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
 
-                                <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
-                                    {{ number_format($summary->total_berat_layak, 2, ',', '.') }} kg
-                                </td>
+<tfoot>
+    <tr class="border-t border-zinc-300 font-semibold dark:border-zinc-700">
+        <td colspan="4" class="px-4 py-4 text-zinc-900 dark:text-white">
+            Total
+        </td>
 
-                                <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
-                                    Rp{{ number_format($summary->total_transaksi, 0, ',', '.') }}
-                                </td>
+        <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
+            {{ number_format($summary->total_berat_layak, 2, ',', '.') }} kg
+        </td>
 
-                                <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
-                                    Rp{{ number_format($summary->total_potongan_kasbon, 0, ',', '.') }}
-                                </td>
+        <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
+            Rp{{ number_format($summary->total_transaksi, 0, ',', '.') }}
+        </td>
 
-                                <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
-                                    Rp{{ number_format($summary->total_dibayar_ke_pelanggan, 0, ',', '.') }}
-                                </td>
+        <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
+            Rp{{ number_format($summary->total_potongan_kasbon, 0, ',', '.') }}
+        </td>
 
-                                <td></td>
-                            </tr>
-                        </tfoot>
+        <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
+            Rp{{ number_format($summary->total_dibayar_ke_pelanggan, 0, ',', '.') }}
+        </td>
+
+        <td></td>
+        <td class="print:hidden"></td>
+    </tr>
+</tfoot>
                     </table>
                 </div>
 
