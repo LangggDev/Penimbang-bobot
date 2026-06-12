@@ -2210,50 +2210,8 @@ Route::delete('/kasbon/{id}', function ($id) {
         ->with('success', 'Kasbon pelanggan berhasil dihapus.');
     })->name('kasbon.destroy');
 
-    Route::get('/laporan', function () {
-    abort_unless(auth()->user()->role === 'kasir', 403);
-
-    $tanggalAwal = request('tanggal_awal', now()->startOfMonth()->toDateString());
-    $tanggalAkhir = request('tanggal_akhir', now()->toDateString());
-
-    $query = DB::table('pembayaran')
-        ->join('transaksi_penimbangan as transaksi', 'pembayaran.transaksi_id', '=', 'transaksi.id')
-        ->join('pelanggan', 'pembayaran.pelanggan_id', '=', 'pelanggan.id')
-        ->leftJoin('users as kasir', 'pembayaran.kasir_id', '=', 'kasir.id')
-        ->select(
-            'pembayaran.*',
-            'transaksi.kode_transaksi',
-            'pelanggan.kode_pelanggan',
-            'pelanggan.nama_pelanggan',
-            'kasir.name as nama_kasir'
-        )
-        ->whereDate('pembayaran.tanggal_bayar', '>=', $tanggalAwal)
-        ->whereDate('pembayaran.tanggal_bayar', '<=', $tanggalAkhir)
-        ->orderByDesc('pembayaran.tanggal_bayar');
-
-    $pembayaran = $query->paginate(10)->withQueryString();
-
-    $summary = DB::table('pembayaran')
-        ->whereDate('tanggal_bayar', '>=', $tanggalAwal)
-        ->whereDate('tanggal_bayar', '<=', $tanggalAkhir)
-        ->selectRaw('
-            COUNT(*) as total_pembayaran,
-            COALESCE(SUM(total_berat_bersih), 0) as total_berat_bersih,
-            COALESCE(SUM(total_potongan_berat), 0) as total_potongan_berat,
-            COALESCE(SUM(total_berat_layak), 0) as total_berat_layak,
-            COALESCE(SUM(total_transaksi), 0) as total_transaksi,
-            COALESCE(SUM(potongan_kasbon), 0) as total_potongan_kasbon,
-            COALESCE(SUM(total_dibayar_ke_pelanggan), 0) as total_dibayar_ke_pelanggan
-        ')
-        ->first();
-
-    return view('kasir.laporan.index', [
-        'pembayaran' => $pembayaran,
-        'summary' => $summary,
-        'tanggalAwal' => $tanggalAwal,
-        'tanggalAkhir' => $tanggalAkhir,
-    ]);
-    })->name('laporan.index');
+    Route::get('/laporan', [\App\Http\Controllers\Kasir\KasirLaporanController::class, 'index'])
+        ->name('laporan.index');
 
     Route::get('/dashboard', function () {
         abort_unless(auth()->user()->role === 'kasir', 403);
@@ -2310,94 +2268,10 @@ Route::delete('/kasbon/{id}', function ($id) {
         ]);
     })->name('dashboard');
 
-    Route::get('/laporan/pembayaran/{id}', function ($id) {
-    abort_unless(auth()->user()->role === 'kasir', 403);
+    Route::get('/laporan/pembayaran/{id}', [\App\Http\Controllers\Kasir\KasirLaporanController::class, 'detail'])
+        ->name('laporan.detail');
 
-    $pembayaran = DB::table('pembayaran')
-        ->join('transaksi_penimbangan as transaksi', 'pembayaran.transaksi_id', '=', 'transaksi.id')
-        ->join('pelanggan', 'pembayaran.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'pembayaran.*',
-            'pembayaran.id as pembayaran_id',
-            'transaksi.kode_transaksi',
-            'transaksi.tanggal_transaksi',
-            'transaksi.plat_kendaraan',
-            'pelanggan.nama_pelanggan',
-            'pelanggan.no_hp',
-            'pelanggan.alamat',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('pembayaran.id', $id)
-        ->first();
-
-    abort_if(!$pembayaran, 404);
-
-    $detailBarang = DB::table('detail_pembayaran_barang as detail_bayar')
-        ->join('detail_transaksi_barang as detail_transaksi', 'detail_bayar.detail_transaksi_barang_id', '=', 'detail_transaksi.id')
-        ->join('jenis_kertas_bekas as barang', 'detail_transaksi.jenis_kertas_bekas_id', '=', 'barang.id')
-        ->select(
-            'barang.nama_barang',
-            'detail_bayar.berat_bersih',
-            'detail_bayar.persentase_potongan',
-            'detail_bayar.potongan_berat',
-            'detail_bayar.berat_layak',
-            'detail_bayar.harga_per_kg',
-            'detail_bayar.subtotal'
-        )
-        ->where('detail_bayar.pembayaran_id', $pembayaran->id)
-        ->orderBy('detail_transaksi.urutan')
-        ->get();
-
-    return view('kasir.laporan.detail', [
-        'pembayaran' => $pembayaran,
-        'detailBarang' => $detailBarang,
-    ]);
-    })->name('laporan.detail');
-
-    Route::get('/laporan/pembayaran/{id}/print', function ($id) {
-    abort_unless(auth()->user()->role === 'kasir', 403);
-
-    $pembayaran = DB::table('pembayaran')
-        ->join('transaksi_penimbangan as transaksi', 'pembayaran.transaksi_id', '=', 'transaksi.id')
-        ->join('pelanggan', 'pembayaran.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'pembayaran.*',
-            'pembayaran.id as pembayaran_id',
-            'transaksi.kode_transaksi',
-            'transaksi.tanggal_transaksi',
-            'transaksi.plat_kendaraan',
-            'pelanggan.nama_pelanggan',
-            'pelanggan.no_hp',
-            'pelanggan.alamat',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('pembayaran.id', $id)
-        ->first();
-
-    abort_if(!$pembayaran, 404);
-
-    $detailBarang = DB::table('detail_pembayaran_barang as detail_bayar')
-        ->join('detail_transaksi_barang as detail_transaksi', 'detail_bayar.detail_transaksi_barang_id', '=', 'detail_transaksi.id')
-        ->join('jenis_kertas_bekas as barang', 'detail_transaksi.jenis_kertas_bekas_id', '=', 'barang.id')
-        ->select(
-            'barang.nama_barang',
-            'detail_bayar.berat_bersih',
-            'detail_bayar.persentase_potongan',
-            'detail_bayar.potongan_berat',
-            'detail_bayar.berat_layak',
-            'detail_bayar.harga_per_kg',
-            'detail_bayar.subtotal'
-        )
-        ->where('detail_bayar.pembayaran_id', $pembayaran->id)
-        ->orderBy('detail_transaksi.urutan')
-        ->get();
-
-    return view('kasir.laporan.print', [
-        'pembayaran' => $pembayaran,
-        'detailBarang' => $detailBarang,
-    ]);
-    })->name('laporan.print');
+    Route::get('/laporan/pembayaran/{id}/print', [\App\Http\Controllers\Kasir\KasirLaporanController::class, 'print'])
+        ->name('laporan.print');
 
     });
