@@ -209,27 +209,71 @@ Route::post('/pelanggan', function () {
     ]);
 })->name('pelanggan.index');
 
-        Route::get('/transaksi', function () {
+        Route::get('/transaksi', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'index'])
+            ->name('transaksi.index');
+
+        Route::get('/transaksi/create', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'create'])
+            ->name('transaksi.create');
+
+        Route::post('/transaksi', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'store'])
+            ->name('transaksi.store');
+
+        Route::get('/pelanggan/{id}/timbangan-pertama', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'timbanganPertama'])
+            ->name('pelanggan.timbangan-pertama');
+
+        Route::post('/pelanggan/{id}/timbangan-pertama', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'simpanTimbanganPertama'])
+            ->name('pelanggan.timbangan-pertama.store');
+
+        Route::get('/transaksi/{id}/timbangan-kedua', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'timbanganKedua'])
+            ->name('transaksi.timbangan-kedua');
+
+        Route::post('/transaksi/{id}/timbang-bertahap', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'simpanTimbangBertahap'])
+            ->name('transaksi.timbang-bertahap.store');
+
+        Route::post('/transaksi/{id}/selesai-penimbangan', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'selesaiPenimbangan'])
+            ->name('transaksi.selesai-penimbangan');
+
+        Route::get('/transaksi/{id}/detail', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'detail'])
+            ->name('transaksi.show');
+
+        Route::get('/dashboard', function () {
             abort_unless(auth()->user()->role === 'penimbang', 403);
 
-            $status = request('status', 'semua');
+            $tanggalMulai = request('tanggal_mulai', now()->toDateString());
+            $tanggalSelesai = request('tanggal_selesai', now()->toDateString());
 
-            $query = DB::table('transaksi_penimbangan as transaksi')
+            // Total Transaksi
+            $totalTransaksiHariIni = DB::table('transaksi_penimbangan')
+                ->where('petugas_timbang_id', auth()->id())
+                ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+                ->count();
+
+            // Total Berat Bersih
+            $totalBeratBersihHariIni = DB::table('detail_transaksi_barang as detail')
+                ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+                ->where('transaksi.petugas_timbang_id', auth()->id())
+                ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+                ->sum('detail.total_berat_bersih') ?? 0;
+
+            // Total Draft
+            $totalDraft = DB::table('transaksi_penimbangan')
+                ->where('petugas_timbang_id', auth()->id())
+                ->where('status', 'draft_penimbangan')
+                ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+                ->count();
+
+            // Total Menunggu QC
+            $totalMenungguQc = DB::table('transaksi_penimbangan')
+                ->where('petugas_timbang_id', auth()->id())
+                ->where('status', 'menunggu_qc')
+                ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+                ->count();
+
+            // Transaksi Terbaru (untuk periode yang dipilih)
+            $transaksiTerbaru = DB::table('transaksi_penimbangan as transaksi')
                 ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
                 ->join('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
-                ->leftJoin('detail_transaksi_barang as detail', 'transaksi.id', '=', 'detail.transaksi_id')
                 ->select(
-                    'transaksi.id',
-                    'transaksi.kode_transaksi',
-                    'transaksi.tanggal_transaksi',
-                    'transaksi.status',
-                    'pelanggan.nama_pelanggan',
-                    'jenis_kendaraan.nama_kendaraan',
-                    DB::raw('COUNT(detail.id) as jumlah_barang'),
-                    DB::raw('COALESCE(SUM(detail.total_berat_bersih), 0) as total_berat_bersih')
-                )
-                ->where('transaksi.petugas_timbang_id', auth()->id())
-                ->groupBy(
                     'transaksi.id',
                     'transaksi.kode_transaksi',
                     'transaksi.tanggal_transaksi',
@@ -237,732 +281,25 @@ Route::post('/pelanggan', function () {
                     'pelanggan.nama_pelanggan',
                     'jenis_kendaraan.nama_kendaraan'
                 )
-                ->orderByDesc('transaksi.tanggal_transaksi');
-
-            if ($status !== 'semua') {
-                $query->where('transaksi.status', $status);
-            }
-
-            $transaksi = $query->paginate(8)->withQueryString();
-
-            $summary = [
-                'total' => DB::table('transaksi_penimbangan')
-                    ->where('petugas_timbang_id', auth()->id())
-                    ->count(),
-
-                'draft' => DB::table('transaksi_penimbangan')
-                    ->where('petugas_timbang_id', auth()->id())
-                    ->where('status', 'draft_penimbangan')
-                    ->count(),
-
-                'menunggu_qc' => DB::table('transaksi_penimbangan')
-                    ->where('petugas_timbang_id', auth()->id())
-                    ->where('status', 'menunggu_qc')
-                    ->count(),
-
-                'selesai' => DB::table('transaksi_penimbangan')
-                    ->where('petugas_timbang_id', auth()->id())
-                    ->where('status', 'selesai')
-                    ->count(),
-            ];
-
-            return view('penimbang.transaksi.index', [
-                'transaksi' => $transaksi,
-                'summary' => $summary,
-                'status' => $status,
-            ]);
-        })->name('transaksi.index');
-
-
-        Route::get('/transaksi/create', function () {
-            abort_unless(auth()->user()->role === 'penimbang', 403);
-
-            $pelanggan = DB::table('pelanggan')
-                ->where('status', 'aktif')
-                ->orderBy('nama_pelanggan')
+                ->where('transaksi.petugas_timbang_id', auth()->id())
+                ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+                ->orderByDesc('transaksi.tanggal_transaksi')
+                ->limit(5)
                 ->get();
 
-            $jenisKendaraan = DB::table('jenis_kendaraan')
-                ->where('status', 'aktif')
-                ->orderBy('nama_kendaraan')
-                ->get();
-
-            return view('penimbang.transaksi.create', [
-                'pelanggan' => $pelanggan,
-                'jenisKendaraan' => $jenisKendaraan,
+            return view('dashboard.penimbang', [
+                'totalTransaksiHariIni' => $totalTransaksiHariIni,
+                'totalBeratBersihHariIni' => $totalBeratBersihHariIni,
+                'totalDraft' => $totalDraft,
+                'totalMenungguQc' => $totalMenungguQc,
+                'transaksiTerbaru' => $transaksiTerbaru,
+                'tanggalMulai' => $tanggalMulai,
+                'tanggalSelesai' => $tanggalSelesai,
             ]);
-        })->name('transaksi.create');
+        })->name('dashboard');
 
-
-        Route::post('/transaksi', function () {
-            abort_unless(auth()->user()->role === 'penimbang', 403);
-
-            request()->validate([
-                'pelanggan_id' => ['required', 'exists:pelanggan,id'],
-                'jenis_kendaraan_id' => ['required', 'exists:jenis_kendaraan,id'],
-                'tanggal_transaksi' => ['required', 'date'],
-                'catatan' => ['nullable', 'string'],
-            ]);
-
-            $tanggal = now()->format('Ymd');
-
-            $urutanHariIni = DB::table('transaksi_penimbangan')
-                ->whereDate('tanggal_transaksi', now()->toDateString())
-                ->count() + 1;
-
-            $kodeTransaksi = 'TRX-' . $tanggal . '-' . str_pad($urutanHariIni, 4, '0', STR_PAD_LEFT);
-
-            DB::table('transaksi_penimbangan')->insert([
-                'kode_transaksi' => $kodeTransaksi,
-                'pelanggan_id' => request('pelanggan_id'),
-                'jenis_kendaraan_id' => request('jenis_kendaraan_id'),
-                'tanggal_transaksi' => request('tanggal_transaksi'),
-                'status' => 'menunggu_qc',
-                'petugas_timbang_id' => auth()->id(),
-                'catatan' => request('catatan'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            return redirect()
-                ->route('penimbang.transaksi.index')
-                ->with('success', 'Transaksi berhasil dibuat. Silakan lanjutkan input barang.');
-        })->name('transaksi.store');
-
-        Route::get('/pelanggan/{id}/timbangan-pertama', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $pelanggan = DB::table('pelanggan')
-        ->where('id', $id)
-        ->where('status', 'aktif')
-        ->first();
-
-    abort_if(!$pelanggan, 404);
-
-    $jenisKendaraan = DB::table('jenis_kendaraan')
-        ->where('status', 'aktif')
-        ->orderBy('nama_kendaraan')
-        ->get();
-
-    $jenisKertasBekas = DB::table('jenis_kertas_bekas')
-        ->where('status', 'aktif')
-        ->orderBy('nama_barang')
-        ->get();
-
-    return view('penimbang.pelanggan.timbangan-pertama', [
-        'pelanggan' => $pelanggan,
-        'jenisKendaraan' => $jenisKendaraan,
-        'jenisKertasBekas' => $jenisKertasBekas,
-    ]);
-})->name('pelanggan.timbangan-pertama');
-
-
-Route::post('/pelanggan/{id}/timbangan-pertama', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $pelanggan = DB::table('pelanggan')
-        ->where('id', $id)
-        ->where('status', 'aktif')
-        ->first();
-
-    abort_if(!$pelanggan, 404);
-
-    request()->validate([
-        'jenis_kendaraan_id' => ['required', 'exists:jenis_kendaraan,id'],
-        'plat_kendaraan' => ['nullable', 'string', 'max:30'],
-        'tanggal_transaksi' => ['required', 'date'],
-        'berat_timbang_pertama' => ['required', 'numeric', 'min:0.01'],
-        'jenis_kertas_bekas_ids' => ['required', 'array', 'min:1'],
-        'jenis_kertas_bekas_ids.*' => ['required', 'distinct', 'exists:jenis_kertas_bekas,id'],
-        'catatan' => ['nullable', 'string'],
-    ]);
-
-    $tanggalKode = now()->format('Ymd');
-
-    $urutanHariIni = DB::table('transaksi_penimbangan')
-        ->whereDate('created_at', now()->toDateString())
-        ->count() + 1;
-
-    $kodeTransaksi = 'TRX-' . $tanggalKode . '-' . str_pad($urutanHariIni, 4, '0', STR_PAD_LEFT);
-
-    DB::transaction(function () use ($kodeTransaksi, $pelanggan) {
-        $transaksiId = DB::table('transaksi_penimbangan')->insertGetId([
-            'kode_transaksi' => $kodeTransaksi,
-            'pelanggan_id' => $pelanggan->id,
-            'jenis_kendaraan_id' => request('jenis_kendaraan_id'),
-            'plat_kendaraan' => request('plat_kendaraan'),
-            'tanggal_transaksi' => \Carbon\Carbon::parse(request('tanggal_transaksi')),
-            'berat_timbang_pertama' => request('berat_timbang_pertama'),
-            'berat_timbang_kedua' => 0,
-            'status' => 'draft_penimbangan',
-            'petugas_timbang_id' => auth()->id(),
-            'catatan' => request('catatan'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        foreach (request('jenis_kertas_bekas_ids') as $index => $jenisKertasBekasId) {
-            DB::table('detail_transaksi_barang')->insert([
-                'transaksi_id' => $transaksiId,
-                'jenis_kertas_bekas_id' => $jenisKertasBekasId,
-                'keterangan_barang' => null,
-                'total_berat_kotor' => 0,
-                'total_tara' => 0,
-                'total_berat_bersih' => 0,
-                'status_qc' => 'belum_dinilai',
-                'urutan' => $index + 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-    });
-
-    return redirect()
-        ->route('penimbang.transaksi.index')
-        ->with('success', 'Timbangan pertama berhasil disimpan. Pelanggan sedang proses bongkar barang.');
-        })->name('pelanggan.timbangan-pertama.store');
-
-
-        Route::get('/transaksi/{id}/timbangan-kedua', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan as transaksi')
-        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'transaksi.*',
-            'pelanggan.nama_pelanggan',
-            'pelanggan.kode_pelanggan',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('transaksi.id', $id)
-        ->where('transaksi.petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    $detailBarang = DB::table('detail_transaksi_barang as detail')
-        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
-        ->select(
-            'detail.id as detail_id',
-            'detail.status_qc',
-            'detail.total_berat_bersih',
-            'kertas.kode_barang',
-            'kertas.nama_barang'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderBy('detail.urutan')
-        ->get();
-
-    $jumlahBelumQc = $detailBarang
-        ->where('status_qc', 'belum_dinilai')
-        ->count();
-
-    return view('penimbang.transaksi.timbangan-kedua', [
-        'transaksi' => $transaksi,
-        'detailBarang' => $detailBarang,
-        'jumlahBelumQc' => $jumlahBelumQc,
-    ]);
-    })->name('transaksi.timbangan-kedua-old');
-
-   Route::get('/transaksi/{id}/timbangan-kedua', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan as transaksi')
-        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'transaksi.*',
-            'pelanggan.kode_pelanggan',
-            'pelanggan.nama_pelanggan',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('transaksi.id', $id)
-        ->where('transaksi.petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    $detailBarang = DB::table('detail_transaksi_barang as detail')
-        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
-        ->select(
-            'detail.id as detail_id',
-            'detail.status_qc',
-            'detail.total_berat_bersih',
-            'detail.urutan',
-            'kertas.kode_barang',
-            'kertas.nama_barang'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderBy('detail.urutan')
-        ->get();
-
-    $riwayatTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
-        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
-        ->select(
-            'riwayat.id',
-            'riwayat.detail_transaksi_barang_id',
-            'riwayat.urutan_timbang',
-            'riwayat.berat_kotor',
-            'riwayat.tara',
-            'riwayat.berat_bersih',
-            'riwayat.waktu_timbang',
-            'riwayat.catatan',
-            'kertas.nama_barang',
-            'kertas.kode_barang'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderBy('riwayat.urutan_timbang')
-        ->get();
-
-    $detailSudahDitimbangIds = $riwayatTimbang
-        ->pluck('detail_transaksi_barang_id')
-        ->unique()
-        ->values();
-
-    $detailBelumDitimbang = $detailBarang
-        ->whereNotIn('detail_id', $detailSudahDitimbangIds)
-        ->values();
-
-    $beratTerakhir = $riwayatTimbang->isNotEmpty()
-        ? (float) $riwayatTimbang->last()->tara
-        : (float) $transaksi->berat_timbang_pertama;
-
-    $totalBeratBersih = (float) $detailBarang->sum('total_berat_bersih');
-
-    return view('penimbang.transaksi.timbangan-kedua', [
-        'transaksi' => $transaksi,
-        'detailBarang' => $detailBarang,
-        'detailBelumDitimbang' => $detailBelumDitimbang,
-        'riwayatTimbang' => $riwayatTimbang,
-        'beratTerakhir' => $beratTerakhir,
-        'totalBeratBersih' => $totalBeratBersih,
-    ]);
-})->name('transaksi.timbangan-kedua');
-
-    Route::post('/transaksi/{id}/timbang-bertahap', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan')
-        ->where('id', $id)
-        ->where('petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    request()->validate([
-        'detail_transaksi_barang_id' => ['required', 'exists:detail_transaksi_barang,id'],
-        'berat_barang_dibongkar' => ['required', 'numeric', 'min:0.01'],
-        'catatan' => ['nullable', 'string'],
-    ]);
-
-    $detail = DB::table('detail_transaksi_barang')
-        ->where('id', request('detail_transaksi_barang_id'))
-        ->where('transaksi_id', $transaksi->id)
-        ->first();
-
-    abort_if(!$detail, 404);
-
-    $sudahPernahDitimbang = DB::table('riwayat_penimbangan_barang')
-        ->where('detail_transaksi_barang_id', $detail->id)
-        ->exists();
-
-    if ($sudahPernahDitimbang) {
-        return back()
-            ->withInput()
-            ->withErrors([
-                'detail_transaksi_barang_id' => 'Jenis kertas ini sudah pernah ditimbang bertahap.',
-            ]);
-    }
-
-    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
-        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderByDesc('riwayat.urutan_timbang')
-        ->select('riwayat.*')
-        ->first();
-
-    $beratSebelumBongkar = $riwayatTerakhir
-        ? (float) $riwayatTerakhir->tara
-        : (float) $transaksi->berat_timbang_pertama;
-
-    $beratBarangDibongkar = (float) request('berat_barang_dibongkar');
-
-    if ($beratBarangDibongkar > $beratSebelumBongkar) {
-        return back()
-            ->withInput()
-            ->withErrors([
-                'berat_barang_dibongkar' => 'Berat barang yang dibongkar tidak boleh lebih besar dari berat terakhir.',
-            ]);
-    }
-
-    $beratSetelahBongkar = round($beratSebelumBongkar - $beratBarangDibongkar, 2);
-
-    $urutanTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
-        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->count() + 1;
-
-    DB::transaction(function () use (
-        $detail,
-        $urutanTimbang,
-        $beratSebelumBongkar,
-        $beratSetelahBongkar,
-        $beratBarangDibongkar
-    ) {
-        DB::table('riwayat_penimbangan_barang')->insert([
-            'detail_transaksi_barang_id' => $detail->id,
-            'urutan_timbang' => $urutanTimbang,
-
-            // berat_kotor = berat sebelum barang dibongkar
-            // tara = sisa berat setelah barang dibongkar
-            // berat_bersih = berat barang yang dibongkar
-            'berat_kotor' => $beratSebelumBongkar,
-            'tara' => $beratSetelahBongkar,
-            'berat_bersih' => $beratBarangDibongkar,
-
-            'waktu_timbang' => now(),
-            'petugas_timbang_id' => auth()->id(),
-            'catatan' => request('catatan'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        DB::table('detail_transaksi_barang')
-            ->where('id', $detail->id)
-            ->update([
-                'total_berat_kotor' => $beratSebelumBongkar,
-                'total_tara' => $beratSetelahBongkar,
-                'total_berat_bersih' => $beratBarangDibongkar,
-
-                'updated_at' => now(),
-            ]);
-    });
-
-    return redirect()
-        ->route('penimbang.transaksi.timbangan-kedua', $transaksi->id)
-        ->with('success', 'Timbang bertahap berhasil disimpan.');
-    })->name('transaksi.timbang-bertahap.store');
-
-Route::post('/transaksi/{id}/selesai-penimbangan', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan')
-        ->where('id', $id)
-        ->where('petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    // Cek jika ada detail yang belum ditimbang
-// Patokan: total_berat_bersih <= 0 berarti belum ditimbang
-$adaDetailBelumDitimbang = DB::table('detail_transaksi_barang')
-    ->where('transaksi_id', $transaksi->id)
-    ->where('total_berat_bersih', '<=', 0)
-    ->exists();
-
-if ($adaDetailBelumDitimbang) {
-    return back()
-        ->withErrors(['selesai' => 'Semua jenis kertas harus sudah ditimbang sebelum menyelesaikan penimbangan.'])
-        ->withInput();
-};
-    $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
-        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderByDesc('riwayat.urutan_timbang')
-        ->select('riwayat.*')
-        ->first();
-
-    // Check apakah ada barang dengan berat > 100 kg (perlu QC)
-    $adaBarangMasukQc = DB::table('detail_transaksi_barang')
-        ->where('transaksi_id', $transaksi->id)
-        ->where('total_berat_bersih', '>', 100)
-        ->exists();
-
-    // Check apakah ada barang dengan berat <= 100 kg (tidak perlu QC)
-    $adaBarangTidakMasukQc = DB::table('detail_transaksi_barang')
-        ->where('transaksi_id', $transaksi->id)
-        ->where('total_berat_bersih', '<=', 100)
-        ->exists();
-
-    // Tentukan status transaksi
-    if ($adaBarangMasukQc) {
-        $statusBerikutnya = 'menunggu_qc';
-        // Set status_qc = 'belum_dinilai' untuk barang > 100 kg
-        DB::table('detail_transaksi_barang')
-            ->where('transaksi_id', $transaksi->id)
-            ->where('total_berat_bersih', '>', 100)
-            ->update(['status_qc' => 'belum_dinilai']);
-    } elseif ($adaBarangTidakMasukQc) {
-        $statusBerikutnya = 'menunggu_pembayaran';
-    } else {
-        $statusBerikutnya = 'menunggu_pembayaran';
-    }
-
-    DB::transaction(function () use ($transaksi, $riwayatTerakhir, $statusBerikutnya) {
-        DB::table('transaksi_penimbangan')
-            ->where('id', $transaksi->id)
-            ->update([
-                'berat_timbang_kedua' => $riwayatTerakhir ? $riwayatTerakhir->tara : 0,
-                'status' => $statusBerikutnya,
-                'updated_at' => now(),
-            ]);
-    });
-
-    // Hitung fuzzy jika ada barang masuk QC
-    if ($adaBarangMasukQc) {
-        app(\App\Services\FuzzyTsukamotoService::class)
-            ->hitungTransaksiJikaSiap((int) $transaksi->id);
-    }
-
-    $pesan = $adaBarangMasukQc
-        ? 'Penimbangan selesai. Barang dengan berat > 100 kg siap masuk QC.'
-        : 'Penimbangan selesai. Semua barang siap masuk pembayaran.';
-
-    return redirect()
-        ->route('penimbang.transaksi.index')
-        ->with('success', $pesan);
-})->name('transaksi.selesai-penimbangan');
-
-    Route::get('/transaksi/{id}/detail', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan as transaksi')
-        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'transaksi.*',
-            'pelanggan.kode_pelanggan',
-            'pelanggan.nama_pelanggan',
-            'pelanggan.no_hp',
-            'pelanggan.alamat',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('transaksi.id', $id)
-        ->where('transaksi.petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    $detailBarang = DB::table('detail_transaksi_barang as detail')
-        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
-        ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
-        ->select(
-            'detail.id as detail_id',
-            'detail.keterangan_barang',
-            'detail.total_berat_kotor',
-            'detail.total_tara',
-            'detail.total_berat_bersih',
-            'detail.status_qc',
-            'detail.urutan',
-            'kertas.kode_barang',
-            'kertas.nama_barang',
-            'qc.id as qc_id',
-            'qc.nilai_kualitas_kertas',
-            'qc.catatan as catatan_qc',
-            'qc.waktu_qc'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderBy('detail.urutan')
-        ->get();
-
-    $riwayatTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
-        ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-        ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
-        ->select(
-            'riwayat.id',
-            'riwayat.detail_transaksi_barang_id',
-            'riwayat.urutan_timbang',
-            'riwayat.berat_kotor',
-            'riwayat.tara',
-            'riwayat.berat_bersih',
-            'riwayat.waktu_timbang',
-            'riwayat.catatan',
-            'kertas.kode_barang',
-            'kertas.nama_barang'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->orderBy('riwayat.urutan_timbang')
-        ->get();
-
-    $riwayatByDetail = $riwayatTimbang->groupBy('detail_transaksi_barang_id');
-
-    $summary = [
-        'jumlah_jenis' => $detailBarang->count(),
-        'total_berat_bersih' => $detailBarang->sum('total_berat_bersih'),
-        'sudah_qc' => $detailBarang->where('status_qc', 'sudah_dinilai')->count(),
-        'belum_qc' => $detailBarang->where('status_qc', 'belum_dinilai')->count(),
-        'jumlah_timbang' => $riwayatTimbang->count(),
-    ];
-
-    return view('penimbang.transaksi.show', [
-        'transaksi' => $transaksi,
-        'detailBarang' => $detailBarang,
-        'riwayatTimbang' => $riwayatTimbang,
-        'riwayatByDetail' => $riwayatByDetail,
-        'summary' => $summary,
-    ]);
-    })->name('transaksi.show');
-
-    Route::post('/transaksi/{id}/hitung-fuzzy', function ($id, \App\Services\FuzzyTsukamotoService $fuzzyService) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan')
-        ->where('id', $id)
-        ->where('petugas_timbang_id', auth()->id())
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    $detailBarang = DB::table('detail_transaksi_barang as detail')
-        ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
-        ->leftJoin('fuzzy_hasil as fuzzy', 'fuzzy.detail_transaksi_barang_id', '=', 'detail.id')
-        ->select(
-            'detail.id',
-            'detail.total_berat_bersih',
-            'detail.status_qc',
-            'qc.id as qc_id',
-            'qc.nilai_kualitas_kertas',
-            'fuzzy.id as fuzzy_id',
-            'fuzzy.nilai_bobot_ketidaklayakan',
-            'fuzzy.persentase_potongan',
-            'fuzzy.potongan_berat',
-            'fuzzy.berat_layak'
-        )
-        ->where('detail.transaksi_id', $transaksi->id)
-        ->get();
-
-    if ($detailBarang->count() === 0) {
-        return back()->withErrors([
-            'fuzzy' => 'Detail jenis kertas belum tersedia.',
-        ]);
-    }
-
-    $belumSiap = $detailBarang->filter(function ($detail) {
-        return $detail->total_berat_bersih <= 0
-            || ! $detail->qc_id
-            || $detail->nilai_kualitas_kertas <= 0
-            || $detail->status_qc !== 'sudah_dinilai';
-    });
-
-    if ($belumSiap->count() > 0) {
-        return back()->withErrors([
-            'fuzzy' => 'Fuzzy belum bisa dihitung. Pastikan semua jenis kertas sudah ditimbang dan sudah dinilai QC.',
-        ]);
-    }
-
-    $berhasil = 0;
-
-    foreach ($detailBarang as $detail) {
-        $fuzzyService->hitungDetail((int) $detail->id);
-        $berhasil++;
-    }
-    
-
-    return redirect()
-        ->route('penimbang.transaksi.show', $transaksi->id)
-        ->with('success', "Perhitungan fuzzy berhasil dilakukan untuk {$berhasil} jenis kertas.");
-    })->name('transaksi.hitung-fuzzy');
-
-    Route::get('/dashboard', function () {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
-
-        $tanggalMulai = request('tanggal_mulai', now()->toDateString());
-        $tanggalSelesai = request('tanggal_selesai', now()->toDateString());
-
-        // Total Transaksi
-        $totalTransaksiHariIni = DB::table('transaksi_penimbangan')
-            ->where('petugas_timbang_id', auth()->id())
-            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
-            ->count();
-
-        // Total Berat Bersih
-        $totalBeratBersihHariIni = DB::table('detail_transaksi_barang as detail')
-            ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
-            ->where('transaksi.petugas_timbang_id', auth()->id())
-            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
-            ->sum('detail.total_berat_bersih') ?? 0;
-
-        // Total Draft
-        $totalDraft = DB::table('transaksi_penimbangan')
-            ->where('petugas_timbang_id', auth()->id())
-            ->where('status', 'draft_penimbangan')
-            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
-            ->count();
-
-        // Total Menunggu QC
-        $totalMenungguQc = DB::table('transaksi_penimbangan')
-            ->where('petugas_timbang_id', auth()->id())
-            ->where('status', 'menunggu_qc')
-            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
-            ->count();
-
-        // Transaksi Terbaru (untuk periode yang dipilih)
-        $transaksiTerbaru = DB::table('transaksi_penimbangan as transaksi')
-            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-            ->join('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
-            ->select(
-                'transaksi.id',
-                'transaksi.kode_transaksi',
-                'transaksi.tanggal_transaksi',
-                'transaksi.status',
-                'pelanggan.nama_pelanggan',
-                'jenis_kendaraan.nama_kendaraan'
-            )
-            ->where('transaksi.petugas_timbang_id', auth()->id())
-            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
-            ->orderByDesc('transaksi.tanggal_transaksi')
-            ->limit(5)
-            ->get();
-
-        return view('dashboard.penimbang', [
-            'totalTransaksiHariIni' => $totalTransaksiHariIni,
-            'totalBeratBersihHariIni' => $totalBeratBersihHariIni,
-            'totalDraft' => $totalDraft,
-            'totalMenungguQc' => $totalMenungguQc,
-            'transaksiTerbaru' => $transaksiTerbaru,
-            'tanggalMulai' => $tanggalMulai,
-            'tanggalSelesai' => $tanggalSelesai,
-        ]);
-    })->name('dashboard');
-    Route::get('/transaksi/{id}/print-antrian', function ($id) {
-    abort_unless(auth()->user()->role === 'penimbang', 403);
-
-    $transaksi = DB::table('transaksi_penimbangan as transaksi')
-        ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-        ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-        ->select(
-            'transaksi.*',
-            'pelanggan.nama_pelanggan',
-            'pelanggan.no_hp',
-            'pelanggan.alamat',
-            'kendaraan.nama_kendaraan'
-        )
-        ->where('transaksi.id', $id)
-        ->first();
-
-    abort_if(!$transaksi, 404);
-
-    $totalBeratBersih = DB::table('detail_transaksi_barang')
-        ->where('transaksi_id', $transaksi->id)
-        ->sum('total_berat_bersih');
-
-    $tanggalTransaksi = \Carbon\Carbon::parse($transaksi->tanggal_transaksi)->toDateString();
-
-    $urutanHariIni = DB::table('transaksi_penimbangan')
-        ->whereDate('tanggal_transaksi', $tanggalTransaksi)
-        ->where('id', '<=', $transaksi->id)
-        ->count();
-
-    $nomorAntrian = sprintf('%03d', $urutanHariIni);
-
-    return view('penimbang.transaksi.print-antrian', [
-        'transaksi' => $transaksi,
-        'totalBeratBersih' => $totalBeratBersih,
-        'nomorAntrian' => $nomorAntrian,
-    ]);
-})->name('transaksi.print-antrian');
+        Route::get('/transaksi/{id}/print-antrian', [\App\Http\Controllers\Penimbang\PenimbangTransaksiController::class, 'printAntrian'])
+            ->name('transaksi.print-antrian');
 
     });
 
