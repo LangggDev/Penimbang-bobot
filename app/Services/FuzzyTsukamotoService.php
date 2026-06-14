@@ -5,59 +5,100 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
+/**
+ * FuzzyTsukamotoService
+ *
+ * Menangani seluruh proses Fuzzy Tsukamoto untuk menghitung bobot ketidaklayakan
+ * kertas bekas berdasarkan empat variabel input:
+ *  - Jenis Kendaraan (K1/K2/K3)
+ *  - Berat Kotor (kg)
+ *  - Berat Bersih (kg)
+ *  - Kualitas Kertas (skala 1–10)
+ *
+ * Alur proses:
+ *  1. Fuzzifikasi  — nilai crisp diubah menjadi derajat keanggotaan (μ)
+ *  2. Inferensi    — setiap rule dievaluasi dengan operator minimum (AND)
+ *  3. Defuzzifikasi — nilai akhir dihitung dengan rata-rata terbobot (weighted average)
+ *
+ * Catatan penting:
+ *  - Barang dengan berat bersih <= 100 kg TIDAK melalui proses ini.
+ *  - Fuzzy hanya dijalankan setelah QC berhasil menyimpan penilaian.
+ *  - Hasil fuzzy disimpan ke tabel fuzzy_hasil agar kasir dapat menggunakannya.
+ *  - Kasir tidak menghitung ulang fuzzy — hanya membaca hasil yang sudah tersimpan.
+ */
 class FuzzyTsukamotoService
 {
 
-        public function hitungDetailJikaSiap(int $detailTransaksiBarangId): bool
-{
-    $data = DB::table('detail_transaksi_barang as detail')
-        ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
-        ->select(
-            'detail.id',
-            'detail.total_berat_bersih',
-            'detail.status_qc',
-            'qc.id as qc_id',
-            'qc.nilai_kualitas_kertas'
-        )
-        ->where('detail.id', $detailTransaksiBarangId)
-        ->first();
+    /**
+     * Memeriksa apakah satu detail barang sudah siap dihitung fuzzy,
+     * lalu menjalankan perhitungan jika semua syarat terpenuhi.
+     *
+     * Syarat siap hitung:
+     *  - Berat bersih > 0 (sudah ditimbang)
+     *  - Sudah ada penilaian QC (qc_id tidak null)
+     *  - Nilai kualitas kertas > 0
+     *  - Status QC = 'sudah_dinilai'
+     *
+     * Entry point utama yang dipanggil dari QcPenilaianService setelah penilaian disimpan.
+     */
+    public function hitungDetailJikaSiap(int $detailTransaksiBarangId): bool
+    {
+        $data = DB::table('detail_transaksi_barang as detail')
+            ->leftJoin('qc_penilaian as qc', 'qc.detail_transaksi_barang_id', '=', 'detail.id')
+            ->select(
+                'detail.id',
+                'detail.total_berat_bersih',
+                'detail.status_qc',
+                'qc.id as qc_id',
+                'qc.nilai_kualitas_kertas'
+            )
+            ->where('detail.id', $detailTransaksiBarangId)
+            ->first();
 
-    if (! $data) {
-        return false;
-    }
-
-    $siapDihitung =
-        (float) $data->total_berat_bersih > 0
-        && $data->qc_id !== null
-        && (float) $data->nilai_kualitas_kertas > 0
-        && $data->status_qc === 'sudah_dinilai';
-
-    if (! $siapDihitung) {
-        return false;
-    }
-
-    $this->hitungDetail($detailTransaksiBarangId);
-
-    return true;
-}
-
-
-public function hitungTransaksiJikaSiap(int $transaksiId): int
-{
-    $details = DB::table('detail_transaksi_barang')
-        ->where('transaksi_id', $transaksiId)
-        ->pluck('id');
-
-    $jumlahBerhasil = 0;
-
-    foreach ($details as $detailId) {
-        if ($this->hitungDetailJikaSiap((int) $detailId)) {
-            $jumlahBerhasil++;
+        if (! $data) {
+            return false;
         }
+
+        // Barang dengan berat bersih <= 100 kg tidak melalui proses QC/Fuzzy.
+        // Sesuai alur bisnis, barang kecil langsung masuk pembayaran dengan potongan 0%.
+        $siapDihitung =
+            (float) $data->total_berat_bersih > 0
+            && $data->qc_id !== null
+            && (float) $data->nilai_kualitas_kertas > 0
+            && $data->status_qc === 'sudah_dinilai';
+
+        if (! $siapDihitung) {
+            return false;
+        }
+
+        $this->hitungDetail($detailTransaksiBarangId);
+
+        return true;
     }
 
-    return $jumlahBerhasil;
-}
+
+    /**
+     * Menjalankan fuzzy untuk semua detail barang dalam satu transaksi.
+     * Digunakan oleh route penimbang saat selesai penimbangan.
+     *
+     * Mengembalikan jumlah detail yang berhasil dihitung.
+     */
+    public function hitungTransaksiJikaSiap(int $transaksiId): int
+    {
+        $details = DB::table('detail_transaksi_barang')
+            ->where('transaksi_id', $transaksiId)
+            ->pluck('id');
+
+        $jumlahBerhasil = 0;
+
+        foreach ($details as $detailId) {
+            if ($this->hitungDetailJikaSiap((int) $detailId)) {
+                $jumlahBerhasil++;
+            }
+        }
+
+        return $jumlahBerhasil;
+    }
 
     public function hitungDetail(int $detailTransaksiBarangId): array
     {
@@ -98,14 +139,18 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
             throw new RuntimeException('Nilai kualitas kertas belum diisi.');
         }
 
+        // Tahap fuzzifikasi: mengubah nilai input crisp menjadi derajat keanggotaan
+        // pada setiap himpunan fuzzy berdasarkan fungsi keanggotaan masing-masing variabel.
         $himpunan = $this->ambilHimpunan();
         $fuzzifikasiDetail = $this->buatFuzzifikasiDetail([
             'jenis_kendaraan' => $jenisKendaraan,
-            'berat_kotor' => $beratKotor,
-            'berat_bersih' => $beratBersih,
+            'berat_kotor'     => $beratKotor,
+            'berat_bersih'    => $beratBersih,
             'kualitas_kertas' => $kualitasKertas,
         ], $himpunan);
 
+        // Tahap inferensi Tsukamoto: menghitung alpha-predicate tiap rule
+        // menggunakan operator minimum (AND) dari seluruh derajat keanggotaan input.
         $rules = DB::table('fuzzy_rule')
             ->where('status', 'aktif')
             ->orderBy('id')
@@ -116,10 +161,11 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
         }
 
         $totalAlphaZ = 0;
-        $totalAlpha = 0;
+        $totalAlpha  = 0;
         $inferensiDetail = [];
 
         foreach ($rules as $rule) {
+            // Hitung derajat keanggotaan (μ) masing-masing premis berdasarkan fungsi keanggotaan.
             $muJenisKendaraan = $this->membership(
                 $jenisKendaraan,
                 $this->getHimpunan($himpunan, 'jenis_kendaraan', $rule->jenis_kendaraan)
@@ -140,6 +186,7 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
                 $this->getHimpunan($himpunan, 'kualitas_kertas', $rule->kualitas_kertas)
             );
 
+            // Alpha-predicate = min dari semua derajat keanggotaan premis (operator AND).
             $alpha = min(
                 $muJenisKendaraan,
                 $muBeratKotor,
@@ -147,6 +194,7 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
                 $muKualitasKertas
             );
 
+            // Hanya rule dengan alpha > 0 yang dianggap aktif agar detail perhitungan lebih ringkas.
             if ($alpha <= 0) {
                 continue;
             }
@@ -224,6 +272,9 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
             throw new RuntimeException('Tidak ada rule fuzzy yang aktif untuk data ini.');
         }
 
+        // Tahap defuzzifikasi: menghitung nilai akhir bobot ketidaklayakan
+        // menggunakan rata-rata terbobot (weighted average).
+        // Rumus: Z = Σ(αi × zi) / Σαi
         $nilaiBobotKetidaklayakan = round($totalAlphaZ / $totalAlpha, 2);
         $persentasePotongan = $nilaiBobotKetidaklayakan;
         $potonganBerat = round($beratBersih * $persentasePotongan / 100, 2);
@@ -288,19 +339,23 @@ public function hitungTransaksiJikaSiap(int $transaksiId): int
     ],
 ];
 
+        // Hasil fuzzy disimpan agar dapat digunakan kasir saat menghitung pembayaran.
+        // Kasir tidak menghitung ulang fuzzy — hanya membaca nilai dari tabel ini.
+        // Detail rule disimpan sebagai jejak perhitungan dalam kolom detail_perhitungan (JSON)
+        // agar QC/Kasir dapat melihat proses fuzzy secara lengkap.
         DB::table('fuzzy_hasil')->updateOrInsert(
             [
                 'detail_transaksi_barang_id' => $data->detail_id,
             ],
             [
-                'qc_penilaian_id' => $data->qc_id,
+                'qc_penilaian_id'            => $data->qc_id,
                 'nilai_bobot_ketidaklayakan' => $nilaiBobotKetidaklayakan,
-                'persentase_potongan' => $persentasePotongan,
-                'potongan_berat' => $potonganBerat,
-                'berat_layak' => $beratLayak,
-                'detail_perhitungan' => json_encode($detailPerhitunganLengkap, JSON_PRETTY_PRINT),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'persentase_potongan'        => $persentasePotongan,
+                'potongan_berat'             => $potonganBerat,
+                'berat_layak'                => $beratLayak,
+                'detail_perhitungan'         => json_encode($detailPerhitunganLengkap, JSON_PRETTY_PRINT),
+                'created_at'                 => now(),
+                'updated_at'                 => now(),
             ]
         );
 
