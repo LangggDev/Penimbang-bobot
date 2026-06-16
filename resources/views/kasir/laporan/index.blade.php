@@ -20,7 +20,7 @@
                 <button
                     type="button"
                     onclick="window.print()"
-                    class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 print:hidden dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 print:hidden dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                 >
                     Cetak Laporan
                 </button>
@@ -37,7 +37,7 @@
                             type="date"
                             name="tanggal_awal"
                             value="{{ $tanggalAwal }}"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >
                     </div>
 
@@ -50,13 +50,13 @@
                             type="date"
                             name="tanggal_akhir"
                             value="{{ $tanggalAkhir }}"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >
                     </div>
 
                     <button
                         type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                     >
                         Terapkan
                     </button>
@@ -82,30 +82,30 @@
             </div>
 
             <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Pembayaran</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ number_format($summary->total_pembayaran, 0, ',', '.') }}
                     </h2>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Berat Layak</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ number_format($summary->total_berat_layak, 2, ',', '.') }} kg
                     </h2>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Transaksi</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
                         Rp{{ number_format($summary->total_transaksi, 0, ',', '.') }}
                     </h2>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Dibayar ke Pelanggan</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-teal-700 dark:text-teal-400">
                         Rp{{ number_format($summary->total_dibayar_ke_pelanggan, 0, ',', '.') }}
                     </h2>
                 </div>
@@ -146,7 +146,7 @@
                 {{ \Carbon\Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') }}
             </td>
 
-            <td class="px-4 py-4 font-medium text-zinc-900 dark:text-white">
+            <td class="tabular-nums px-4 py-4 font-medium text-zinc-900 dark:text-white">
                 {{ $item->kode_pembayaran }}
             </td>
 
@@ -158,19 +158,19 @@
                 {{ $item->nama_pelanggan }}
             </td>
 
-            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+            <td class="tabular-nums px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
                 {{ number_format($item->total_berat_layak, 2, ',', '.') }} kg
             </td>
 
-            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+            <td class="tabular-nums px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
                 Rp{{ number_format($item->total_transaksi, 0, ',', '.') }}
             </td>
 
-            <td class="px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
+            <td class="tabular-nums px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
                 Rp{{ number_format($item->potongan_kasbon, 0, ',', '.') }}
             </td>
 
-            <td class="px-4 py-4 text-right font-semibold text-zinc-900 dark:text-white">
+            <td class="tabular-nums px-4 py-4 text-right font-semibold text-teal-700 dark:text-teal-400">
                 Rp{{ number_format($item->total_dibayar_ke_pelanggan, 0, ',', '.') }}
             </td>
 
@@ -181,7 +181,7 @@
             <td class="px-4 py-4 print:hidden">
                 <a
                     href="{{ route('kasir.laporan.detail', $item->id) }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                 >
                     Detail
                 </a>

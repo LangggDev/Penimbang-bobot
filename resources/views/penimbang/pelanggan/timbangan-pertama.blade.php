@@ -4,15 +4,15 @@
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div class="space-y-2">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-teal-600 dark:text-teal-400">
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                         Timbangan Pertama
                     </h1>
 
-                    <p class="max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                    <p class="max-w-2xl text-sm leading-6 text-slate-600 dark:text-zinc-400">
                         Buat transaksi awal untuk pelanggan yang baru datang. Pilih jenis kertas bekas yang dibawa,
                         lalu simpan berat kendaraan pada timbangan pertama.
                     </p>
@@ -20,44 +20,44 @@
 
                 <a
                     href="{{ route('penimbang.pelanggan.index') }}"
-                    class="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                 >
                     Kembali
                 </a>
             </div>
 
-            <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="grid gap-4 md:grid-cols-3">
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Kode Pelanggan</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <p class="text-sm text-slate-500 dark:text-zinc-400">Kode Pelanggan</p>
+                        <p class="mt-1 font-semibold text-slate-900 dark:text-white">
                             {{ $pelanggan->kode_pelanggan }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Nama Pelanggan</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <p class="text-sm text-slate-500 dark:text-zinc-400">Nama Pelanggan</p>
+                        <p class="mt-1 font-semibold text-slate-900 dark:text-white">
                             {{ $pelanggan->nama_pelanggan }}
                         </p>
                     </div>
 
                     <div>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Nomor HP</p>
-                        <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <p class="text-sm text-slate-500 dark:text-zinc-400">Nomor HP</p>
+                        <p class="mt-1 font-semibold text-slate-900 dark:text-white">
                             {{ $pelanggan->no_hp ?: '-' }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <form method="POST" action="{{ route('penimbang.pelanggan.timbangan-pertama.store', $pelanggan->id) }}" class="space-y-7">
                     @csrf
 
                     <div class="grid gap-6 md:grid-cols-2">
                         <div class="space-y-2">
-                            <label for="jenis_kendaraan_id" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label for="jenis_kendaraan_id" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                                 Jenis Kendaraan
                             </label>
 
@@ -65,7 +65,7 @@
                                 id="jenis_kendaraan_id"
                                 name="jenis_kendaraan_id"
                                 required
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                             >
                                 <option value="">Pilih kendaraan</option>
                                 @foreach ($jenisKendaraan as $item)
@@ -81,7 +81,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label for="plat_kendaraan" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label for="plat_kendaraan" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                                 Plat Kendaraan
                             </label>
 
@@ -91,7 +91,7 @@
                                 name="plat_kendaraan"
                                 value="{{ old('plat_kendaraan') }}"
                                 placeholder="Contoh: B 1234 ABC"
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                             >
 
                             @error('plat_kendaraan')
@@ -102,7 +102,7 @@
 
                     <div class="grid gap-6 md:grid-cols-2">
                         <div class="space-y-2">
-                            <label for="tanggal_transaksi" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label for="tanggal_transaksi" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                                 Waktu Timbangan Pertama
                             </label>
 
@@ -112,7 +112,7 @@
                                 name="tanggal_transaksi"
                                 value="{{ old('tanggal_transaksi', now()->format('Y-m-d\TH:i')) }}"
                                 required
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                             >
 
                             @error('tanggal_transaksi')
@@ -121,7 +121,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label for="berat_timbang_pertama" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label for="berat_timbang_pertama" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                                 Berat Timbangan Pertama
                             </label>
 
@@ -135,10 +135,10 @@
                                     value="{{ old('berat_timbang_pertama') }}"
                                     placeholder="0.00"
                                     required
-                                    class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 pr-12 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                                 >
 
-                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">
                                     kg
                                 </span>
                             </div>
@@ -151,31 +151,31 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            <label class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                                 Jenis Kertas Bekas yang Dibawa
                             </label>
 
-                            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                                 Pilih satu atau lebih jenis kertas. Jika pelanggan membawa beberapa jenis, semuanya tetap masuk dalam satu transaksi.
                             </p>
                         </div>
 
                         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             @foreach ($jenisKertasBekas as $item)
-                                <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-zinc-200 p-4 transition hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50">
+                                <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 p-4 transition hover:bg-slate-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50">
                                     <input
                                         type="checkbox"
                                         name="jenis_kertas_bekas_ids[]"
                                         value="{{ $item->id }}"
                                         @checked(in_array($item->id, old('jenis_kertas_bekas_ids', [])))
-                                        class="mt-1 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                        class="mt-1 rounded border-slate-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-2"
                                     >
 
                                     <span>
-                                        <span class="block font-semibold text-zinc-900 dark:text-white">
+                                        <span class="block font-semibold text-slate-900 dark:text-white">
                                             {{ $item->nama_barang }}
                                         </span>
-                                        <span class="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">
+                                        <span class="mt-1 block text-sm text-slate-500 dark:text-slate-400">
                                             {{ $item->kode_barang }}
                                         </span>
                                     </span>
@@ -193,7 +193,7 @@
                     </div>
 
                     <div class="space-y-2">
-                        <label for="catatan" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        <label for="catatan" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                             Catatan
                         </label>
 
@@ -202,7 +202,7 @@
                             name="catatan"
                             rows="4"
                             placeholder="Catatan tambahan jika ada"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >{{ old('catatan') }}</textarea>
 
                         @error('catatan')
@@ -210,12 +210,12 @@
                         @enderror
                     </div>
 
-                    <div class="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950">
-                        <h2 class="text-sm font-semibold text-zinc-900 dark:text-white">
+                    <div class="rounded-2xl border border-teal-100 bg-teal-50 p-5 dark:border-teal-900/30 dark:bg-teal-900/10">
+                        <h2 class="text-sm font-semibold text-teal-800 dark:text-teal-300">
                             Alur Setelah Disimpan
                         </h2>
 
-                        <p class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                        <p class="mt-2 text-sm leading-6 text-teal-700 dark:text-teal-400">
                             Sistem akan membuat transaksi dengan status Draft Penimbangan. Jenis kertas yang dipilih
                             akan masuk sebagai detail barang. Setelah bongkar selesai, petugas akan mengisi timbangan kedua
                             dan membagi berat bersih per jenis barang.
@@ -225,14 +225,14 @@
                     <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                         <a
                             href="{{ route('penimbang.pelanggan.index') }}"
-                            class="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                            class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                         >
                             Batal
                         </a>
 
                         <button
                             type="submit"
-                            class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
                         >
                             Simpan Timbangan Pertama
                         </button>

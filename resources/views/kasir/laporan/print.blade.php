@@ -127,13 +127,23 @@
             margin-top: 24px;
         }
 
+        .num {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+
+        .grand-total .num {
+            font-size: 18px;
+        }
+
         button {
             padding: 10px 18px;
             border: none;
             border-radius: 8px;
-            background: #111;
+            background: #0F766E;
             color: white;
             cursor: pointer;
+            font-weight: 600;
         }
 
         @media print {
@@ -231,15 +241,15 @@
                     @forelse ($detailBarang as $item)
                         <tr>
                             <td>{{ $item->nama_barang }}</td>
-                            <td class="text-right">{{ number_format($item->berat_bersih, 2, ',', '.') }} kg</td>
-                            <td class="text-right">
+                            <td class="text-right num">{{ number_format($item->berat_bersih, 2, ',', '.') }} kg</td>
+                            <td class="text-right num">
                                 {{ number_format($item->persentase_potongan, 2, ',', '.') }}%
                                 <br>
                                 {{ number_format($item->potongan_berat, 2, ',', '.') }} kg
                             </td>
-                            <td class="text-right">{{ number_format($item->berat_layak, 2, ',', '.') }} kg</td>
-                            <td class="text-right">Rp{{ number_format($item->harga_per_kg, 0, ',', '.') }}</td>
-                            <td class="text-right">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                            <td class="text-right num">{{ number_format($item->berat_layak, 2, ',', '.') }} kg</td>
+                            <td class="text-right num">Rp{{ number_format($item->harga_per_kg, 0, ',', '.') }}</td>
+                            <td class="text-right num">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -252,27 +262,27 @@
             <div class="summary">
                 <div class="row">
                     <span>Total Berat Bersih</span>
-                    <strong>{{ number_format($pembayaran->total_berat_bersih, 2, ',', '.') }} kg</strong>
+                    <strong class="num">{{ number_format($pembayaran->total_berat_bersih, 2, ',', '.') }} kg</strong>
                 </div>
 
                 <div class="row">
                     <span>Total Berat Layak</span>
-                    <strong>{{ number_format($pembayaran->total_berat_layak, 2, ',', '.') }} kg</strong>
+                    <strong class="num">{{ number_format($pembayaran->total_berat_layak, 2, ',', '.') }} kg</strong>
                 </div>
 
                 <div class="row">
                     <span>Total Transaksi</span>
-                    <strong>Rp{{ number_format($pembayaran->total_transaksi, 0, ',', '.') }}</strong>
+                    <strong class="num">Rp{{ number_format($pembayaran->total_transaksi, 0, ',', '.') }}</strong>
                 </div>
 
                 <div class="row">
                     <span>Potongan Kasbon</span>
-                    <strong>Rp{{ number_format($pembayaran->potongan_kasbon, 0, ',', '.') }}</strong>
+                    <strong class="num">Rp{{ number_format($pembayaran->potongan_kasbon, 0, ',', '.') }}</strong>
                 </div>
 
                 <div class="row grand-total">
                     <span>Dibayar</span>
-                    <strong>Rp{{ number_format($pembayaran->total_dibayar_ke_pelanggan, 0, ',', '.') }}</strong>
+                    <strong class="num">Rp{{ number_format($pembayaran->total_dibayar_ke_pelanggan, 0, ',', '.') }}</strong>
                 </div>
             </div>
         </div>

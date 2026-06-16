@@ -3,20 +3,23 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-neutral-100 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <body class="min-h-screen bg-slate-100 antialiased dark:bg-zinc-950">
+        <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div class="flex w-full max-w-md flex-col gap-6">
+                {{-- Brand Logo --}}
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-700 shadow-sm">
+                        <x-app-logo-icon class="size-6 fill-current text-white" />
                     </span>
-
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+                    <span class="text-sm font-semibold text-slate-700 dark:text-zinc-300">
+                        {{ config('app.name', 'Laravel') }}
+                    </span>
                 </a>
 
+                {{-- Login Card --}}
                 <div class="flex flex-col gap-6">
-                    <div class="rounded-xl border bg-white dark:bg-stone-950 dark:border-stone-800 text-stone-800 shadow-xs">
-                        <div class="px-10 py-8">{{ $slot }}</div>
+                    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                        <div class="px-8 py-8">{{ $slot }}</div>
                     </div>
                 </div>
             </div>

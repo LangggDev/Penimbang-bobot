@@ -3,8 +3,8 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-slate-50 dark:bg-zinc-950">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
@@ -52,7 +52,7 @@
                     @endif
 
                     @if (auth()->user()->role === 'qc')
-                        <flux:navlist.group :heading="__('Menu QC')" class="grid">
+                        <flux:navlist.group :heading="__('Menu Quality Control')" class="grid">
                             <flux:navlist.item
                                 icon="home"
                                 :href="route('qc.dashboard')"
@@ -133,6 +133,21 @@
             </flux:sidebar.nav>
 
             <flux:spacer />
+
+            {{-- Role badge di bagian bawah sidebar --}}
+            @php
+                $roleLabel = match(auth()->user()->role) {
+                    'penimbang' => ['label' => 'Penimbang', 'class' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'],
+                    'qc'        => ['label' => 'Quality Control', 'class' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'],
+                    'kasir'     => ['label' => 'Kasir', 'class' => 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300'],
+                    default     => ['label' => ucfirst(auth()->user()->role), 'class' => 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300'],
+                };
+            @endphp
+            <div class="px-3 pb-2">
+                <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold {{ $roleLabel['class'] }}">
+                    {{ $roleLabel['label'] }}
+                </span>
+            </div>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>

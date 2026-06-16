@@ -41,7 +41,7 @@
 
             <div class="flex items-center justify-end">
                 <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
-                    {{ __('Log in') }}
+                    {{ __('Masuk') }}
                 </flux:button>
             </div>
         </form>

@@ -9,7 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -23,16 +23,35 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    /* ── Brand Colors (DESIGN.md §3.1) ── */
+    --color-brand-primary:       #0F766E;
+    --color-brand-primary-hover: #115E59;
+    --color-brand-soft:          #CCFBF1;
+    --color-brand-muted:         #5EEAD4;
+
+    /* ── Semantic Colors (DESIGN.md §3.2) ── */
+    --color-status-success-text: #15803D;
+    --color-status-success-bg:   #DCFCE7;
+    --color-status-warning-text: #B45309;
+    --color-status-warning-bg:   #FEF3C7;
+    --color-status-danger-text:  #B91C1C;
+    --color-status-danger-bg:    #FEE2E2;
+    --color-status-info-text:    #1D4ED8;
+    --color-status-info-bg:      #DBEAFE;
+
+    /* ── Border (DESIGN.md §3.1) ── */
+    --color-border-focus: #14B8A6;
+
+    --color-accent: var(--color-brand-primary);
+    --color-accent-content: var(--color-brand-primary);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-brand-muted);
+        --color-accent-content: var(--color-brand-muted);
+        --color-accent-foreground: var(--color-zinc-900);
     }
 }
 
@@ -45,6 +64,32 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    /* ── Tabular numbers untuk semua angka penting (DESIGN.md §3.5) ── */
+    .tabular-nums {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+/* ── Hilangkan spinner/scroll control pada input[type="number"] (DESIGN.md §5.2) ── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ── Cegah scroll wheel mengubah nilai numerik (DESIGN.md §5.2 UX rule) ── */
+input[type="number"] {
+    pointer-events: auto;
+}
+
+input[type="number"]:focus {
+    /* Mencegah scroll wheel mengubah nilai saat focus */
+    scroll-margin: 0;
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
@@ -58,9 +103,11 @@
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+    @apply outline-hidden ring-2 ring-offset-2;
+    --tw-ring-color: var(--color-border-focus);
+    --tw-ring-offset-color: var(--color-white);
 }
 
-/* \[:where(&)\]:size-4 {
+/* \\[:where(&)\\]:size-4 {
     @apply size-4;
 } */

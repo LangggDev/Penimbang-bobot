@@ -35,11 +35,11 @@
             @endif
 
             <div class="grid gap-5 md:grid-cols-3">
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Menunggu Pembayaran
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
                         {{ number_format($summary['menunggu_pembayaran'], 0, ',', '.') }}
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
@@ -47,11 +47,11 @@
                     </p>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Total Berat Layak Pending
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
                         {{ number_format($summary['total_berat_layak_pending'], 2, ',', '.') }} kg
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
@@ -59,11 +59,11 @@
                     </p>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Pembayaran Tersimpan
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
                         {{ number_format($summary['sudah_dibayar'], 0, ',', '.') }}
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
@@ -98,14 +98,14 @@
                             name="q"
                             value="{{ $keyword }}"
                             placeholder="Cari kode transaksi, pelanggan, atau plat kendaraan"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >
                     </div>
 
                     <div class="flex flex-col gap-3 sm:flex-row">
                         <button
                             type="submit"
-                            class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                            class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                         >
                             Cari
                         </button>
@@ -146,12 +146,12 @@
                                             {{ $item->kode_transaksi }}
                                         </h3>
 
-                                        <span class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                        <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
                                             Menunggu Pembayaran
                                         </span>
 
                                         @if ($siapBayar)
-                                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
                                                 Fuzzy Lengkap
                                             </span>
                                         @else
@@ -179,17 +179,17 @@
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Jumlah Barang:</span>
-                                            {{ $item->jumlah_barang }}
+                                            <span class="tabular-nums font-semibold">{{ $item->jumlah_barang }}</span>
                                         </p>
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Berat Bersih:</span>
-                                            {{ number_format($item->total_berat_bersih, 2, ',', '.') }} kg
+                                            <span class="tabular-nums font-semibold">{{ number_format($item->total_berat_bersih, 2, ',', '.') }}</span> kg
                                         </p>
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Berat Layak:</span>
-                                            {{ number_format($item->total_berat_layak, 2, ',', '.') }} kg
+                                            <span class="tabular-nums font-semibold">{{ number_format($item->total_berat_layak, 2, ',', '.') }}</span> kg
                                         </p>
                                     </div>
                                 </div>
@@ -197,7 +197,7 @@
                                 <div class="flex flex-col gap-3 sm:flex-row lg:flex-col">
                                     <a
                                         href="{{ route('kasir.pembayaran.show', $item->id) }}"
-                                        class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                                        class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                                     >
                                         Proses Pembayaran
                                     </a>

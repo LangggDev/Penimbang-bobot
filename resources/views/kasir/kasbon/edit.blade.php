@@ -58,7 +58,7 @@
                                 value="{{ old('tanggal_hutang', \Carbon\Carbon::parse($hutang->tanggal_hutang)->toDateString()) }}"
                                 {{ $sudahAdaPembayaran ? 'readonly' : '' }}
                                 required
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 read-only:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:read-only:bg-zinc-800"
+                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 read-only:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:read-only:bg-zinc-800"
                             >
                         </div>
 
@@ -75,7 +75,7 @@
                                 step="1"
                                 {{ $sudahAdaPembayaran ? 'readonly' : '' }}
                                 required
-                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 read-only:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:read-only:bg-zinc-800"
+                                class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 read-only:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:read-only:bg-zinc-800"
                             >
                         </div>
                     </div>
@@ -83,21 +83,21 @@
                     <div class="grid gap-5 md:grid-cols-3">
                         <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Kasbon</p>
-                            <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                            <p class="mt-1 tabular-nums font-semibold text-zinc-900 dark:text-white">
                                 Rp{{ number_format($hutang->total_hutang, 0, ',', '.') }}
                             </p>
                         </div>
 
                         <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">Total Terbayar</p>
-                            <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                            <p class="mt-1 tabular-nums font-semibold text-zinc-900 dark:text-white">
                                 Rp{{ number_format($hutang->total_terbayar, 0, ',', '.') }}
                             </p>
                         </div>
 
-                        <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Sisa Kasbon</p>
-                            <p class="mt-1 font-semibold text-zinc-900 dark:text-white">
+                        <div class="rounded-xl bg-teal-50 p-4 dark:bg-teal-900/20">
+                            <p class="text-sm text-teal-700 dark:text-teal-300">Sisa Kasbon</p>
+                            <p class="mt-1 tabular-nums font-semibold text-teal-900 dark:text-teal-100">
                                 Rp{{ number_format($hutang->sisa_hutang, 0, ',', '.') }}
                             </p>
                         </div>
@@ -112,13 +112,13 @@
                             name="keterangan"
                             rows="4"
                             placeholder="Opsional"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >{{ old('keterangan', $hutang->keterangan) }}</textarea>
                     </div>
 
                     <button
                         type="submit"
-                        class="inline-flex w-full items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        class="inline-flex w-full items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                     >
                         Simpan Perubahan
                     </button>

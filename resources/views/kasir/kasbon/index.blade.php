@@ -19,7 +19,7 @@
 
                 <a
                     href="{{ route('kasir.kasbon.create') }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                 >
                     Tambah Kasbon
                 </a>
@@ -42,29 +42,29 @@
             @endif
 
             <div class="grid gap-5 md:grid-cols-3">
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Kasbon Aktif</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ number_format($summary['belum_lunas'], 0, ',', '.') }}
                     </h2>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Kasbon Lunas</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ number_format($summary['lunas'], 0, ',', '.') }}
                     </h2>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Sisa Kasbon</p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-teal-700 dark:text-teal-400">
                         Rp{{ number_format($summary['total_sisa_hutang'], 0, ',', '.') }}
                     </h2>
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
+            <div class="rounded-2xl border border-teal-200 bg-teal-50 p-5 text-teal-900 dark:border-teal-900/40 dark:bg-teal-900/20 dark:text-teal-200">
                 <h2 class="text-sm font-semibold">Catatan Kasbon</h2>
                 <p class="mt-2 text-sm leading-6">
                     Kasbon tidak mengurangi berat barang dan tidak mengubah hasil fuzzy. Kasbon hanya mengurangi uang yang diterima pelanggan saat pembayaran.
@@ -82,7 +82,7 @@
                             name="q"
                             value="{{ $keyword }}"
                             placeholder="Cari kode, pelanggan, atau kode pelanggan"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >
                     </div>
 
@@ -92,7 +92,7 @@
                         </label>
                         <select
                             name="status"
-                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                            class="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                         >
                             <option value="semua" @selected($status === 'semua')>Semua Status</option>
                             <option value="belum_lunas" @selected($status === 'belum_lunas')>Belum Lunas</option>
@@ -102,7 +102,7 @@
 
                     <button
                         type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
                     >
                         Terapkan
                     </button>
@@ -134,11 +134,11 @@
                                         </h3>
 
                                         @if ($item->status === 'belum_lunas')
-                                            <span class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
                                                 Belum Lunas
                                             </span>
                                         @else
-                                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
                                                 Lunas
                                             </span>
                                         @endif
@@ -152,17 +152,17 @@
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Total Kasbon:</span>
-                                            Rp{{ number_format($item->total_hutang, 0, ',', '.') }}
+                                            <span class="tabular-nums">Rp{{ number_format($item->total_hutang, 0, ',', '.') }}</span>
                                         </p>
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Terbayar:</span>
-                                            Rp{{ number_format($item->total_terbayar, 0, ',', '.') }}
+                                            <span class="tabular-nums">Rp{{ number_format($item->total_terbayar, 0, ',', '.') }}</span>
                                         </p>
 
                                         <p>
                                             <span class="font-medium text-zinc-800 dark:text-zinc-200">Sisa:</span>
-                                            Rp{{ number_format($item->sisa_hutang, 0, ',', '.') }}
+                                            <span class="tabular-nums font-semibold text-teal-700 dark:text-teal-400">Rp{{ number_format($item->sisa_hutang, 0, ',', '.') }}</span>
                                         </p>
                                     </div>
                                 </div>
