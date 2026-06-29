@@ -56,9 +56,9 @@
                     </div>
 
                     <div>
-                        <p class="text-sm text-slate-500 dark:text-zinc-400">Berat Sebelum Bongkar</p>
+                        <p class="text-sm text-slate-500 dark:text-zinc-400">Berat Timbangan Pertama</p>
                         <p class="mt-1 font-semibold text-slate-900 dark:text-white tabular-nums">
-                            {{ number_format($detail->total_berat_kotor, 2, ',', '.') }} kg
+                            {{ number_format($detail->berat_timbang_pertama, 2, ',', '.') }} kg
                         </p>
                     </div>
 

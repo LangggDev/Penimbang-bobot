@@ -180,7 +180,7 @@ class QcPenilaianService
                 [
                     'qc_user_id'           => auth()->id(),
                     'nilai_jenis_kendaraan' => $nilaiJenisKendaraan,
-                    'nilai_berat_kotor'     => $detail->total_berat_kotor,
+                    'nilai_berat_kotor'     => $detail->berat_timbang_pertama,
                     'nilai_berat_bersih'    => $detail->total_berat_bersih,
                     'nilai_kualitas_kertas' => $data['nilai_kualitas_kertas'],
                     'catatan'              => $data['catatan'] ?? null,

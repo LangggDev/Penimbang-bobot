@@ -2,10 +2,6 @@
     <div class="px-6 py-6 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-6xl space-y-8">
 
-            @php
-                $isSingleItem = $detailBarang->count() === 1;
-            @endphp
-
             {{-- Header --}}
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div class="space-y-2">
@@ -14,23 +10,13 @@
                     </p>
 
                     <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                        @if ($isSingleItem)
-                            Proses Timbang &mdash; Single Item
-                        @else
-                            Proses Bongkar &amp; Timbang Bertahap
-                        @endif
+                        Proses Bongkar & Timbang Bertahap
                     </h1>
 
                     <p class="max-w-3xl text-sm leading-6 text-slate-600 dark:text-zinc-400">
-                        @if ($isSingleItem)
-                            Transaksi ini hanya memiliki <strong>1 jenis kertas</strong>.
-                            Masukkan berat kendaraan akhir (timbangan kedua).
-                            Berat bersih dihitung dari selisih timbang pertama dan timbangan kedua.
-                        @else
-                            Digunakan ketika pelanggan membawa lebih dari satu jenis kertas bekas.
-                            Setiap selesai bongkar satu jenis kertas, kendaraan ditimbang ulang.
-                            Berat jenis kertas dihitung dari selisih berat sebelumnya dengan berat setelah bongkar.
-                        @endif
+                        Digunakan ketika pelanggan membawa lebih dari satu jenis kertas bekas.
+                        Setiap selesai bongkar satu jenis kertas, kendaraan ditimbang ulang.
+                        Berat jenis kertas dihitung dari selisih berat sebelumnya dengan berat setelah bongkar.
                     </p>
                 </div>
 
@@ -109,48 +95,51 @@
             {{-- Ringkasan --}}
             <div class="grid gap-5 md:grid-cols-3">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-600">
-                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Jenis Kertas</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
+                        Jenis Kertas
+                    </p>
                     <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
                         {{ $detailBarang->count() }}
                     </h2>
-                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Total jenis kertas dalam transaksi.</p>
+                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">
+                        Total jenis kertas dalam transaksi.
+                    </p>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-green-600">
-                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Sudah Ditimbang</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
+                        Sudah Ditimbang
+                    </p>
                     <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
                         {{ $riwayatTimbang->count() }}
                     </h2>
-                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Jenis kertas yang sudah selesai dibongkar.</p>
+                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">
+                        Jenis kertas yang sudah selesai dibongkar.
+                    </p>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-400">
-                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Total Berat Bersih</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
+                        Total Berat Bersih
+                    </p>
                     <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
                         {{ number_format($totalBeratBersih, 2, ',', '.') }} kg
                     </h2>
-                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Akumulasi hasil bongkar bertahap.</p>
+                    <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">
+                        Akumulasi hasil bongkar bertahap.
+                    </p>
                 </div>
             </div>
 
             {{-- Catatan konsep --}}
             <div class="rounded-2xl border border-teal-100 bg-teal-50 p-5 dark:border-teal-900/30 dark:bg-teal-900/10">
                 <h2 class="text-sm font-semibold text-teal-800 dark:text-teal-300">
-                    @if ($isSingleItem)
-                        Cara Hitung Timbang Single Item
-                    @else
-                        Cara Hitung Timbang Bertahap
-                    @endif
+                    Cara Hitung Timbang Bertahap
                 </h2>
 
                 <p class="mt-2 text-sm leading-6 text-teal-700 dark:text-teal-400">
-                    @if ($isSingleItem)
-                        Contoh: timbang awal 1650 kg. Setelah bongkar, kendaraan ditimbang ulang menjadi 1180 kg.
-                        Berat bersih = 1650 &minus; 1180 = <strong>470 kg</strong>.
-                    @else
-                        Contoh: timbang awal 2200 kg. Setelah bongkar SWL (200 kg), sisa 2000 kg.
-                        Setelah bongkar Duplex (300 kg), sisa 1700 kg. Setelah bongkar Box (600 kg), sisa 1100 kg.
-                    @endif
+                    Contoh: timbang awal 1780 kg. Setelah bongkar Duplex, kendaraan ditimbang menjadi 1630 kg.
+                    Maka berat Duplex = 1780 - 1630 = 150 kg. Setelah itu berat 1630 kg menjadi acuan timbang berikutnya.
                 </p>
             </div>
 
@@ -158,20 +147,11 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold text-slate-900 dark:text-white">
-                        @if ($isSingleItem)
-                            Input Timbangan Kedua
-                        @else
-                            Input Bongkar Berikutnya
-                        @endif
+                        Input Bongkar Berikutnya
                     </h2>
 
                     <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">
-                        @if ($isSingleItem)
-                            Pilih jenis kertas, lalu masukkan berat kendaraan akhir (timbangan kedua).
-                            Sistem akan menghitung berat bersih secara otomatis.
-                        @else
-                            Pilih jenis kertas yang baru selesai dibongkar, lalu input berat bersih barang yang dibongkar.
-                        @endif
+                        Pilih jenis kertas yang baru selesai dibongkar, lalu input berat kendaraan setelah bongkar.
                     </p>
                 </div>
 
@@ -183,10 +163,7 @@
                     >
                         @csrf
 
-                        {{-- Hidden values for JS preview --}}
-                        <input type="hidden" id="berat_timbang_pertama" value="{{ $transaksi->berat_timbang_pertama }}">
                         <input type="hidden" id="berat_sebelumnya" value="{{ $beratTerakhir }}">
-                        <input type="hidden" id="is_single_item" value="{{ $isSingleItem ? '1' : '0' }}">
 
                         <div class="grid gap-5 md:grid-cols-2">
                             <div class="space-y-2">
@@ -210,98 +187,54 @@
                             </div>
 
                             <div class="space-y-2">
-                                @if ($isSingleItem)
-                                    {{-- SINGLE ITEM: input berat kendaraan akhir --}}
-                                    <label for="berat_kendaraan_akhir" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
-                                        Berat Kendaraan Akhir / Timbangan Kedua
-                                    </label>
+                                <label for="berat_barang_dibongkar" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
+                                    Berat Barang yang Dibongkar
+                                </label>
 
-                                    <div class="relative">
-                                        <input
-                                            id="berat_kendaraan_akhir"
-                                            type="number"
-                                            step="0.01"
-                                            min="0.01"
-                                            name="berat_kendaraan_akhir"
-                                            value="{{ old('berat_kendaraan_akhir') }}"
-                                            placeholder="Contoh: 1180"
-                                            required
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-                                        >
-                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">kg</span>
-                                    </div>
+                                <div class="relative">
+                                    <input
+                                        id="berat_barang_dibongkar"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        name="berat_barang_dibongkar"
+                                        value="{{ old('berat_barang_dibongkar') }}"
+                                        placeholder="Contoh: 150"
+                                        required
+                                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+                                    >
 
-                                    <p class="text-sm text-slate-500 dark:text-zinc-400">
-                                        Masukkan berat kendaraan akhir. Berat bersih = timbang pertama
-                                        ({{ number_format($transaksi->berat_timbang_pertama, 2, ',', '.') }} kg) &minus; nilai ini.
-                                    </p>
-                                @else
-                                    {{-- MULTI ITEM: input berat barang dibongkar --}}
-                                    <label for="berat_barang_dibongkar" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
-                                        Berat Bersih Barang yang Dibongkar
-                                    </label>
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+                                        kg
+                                    </span>
+                                </div>
 
-                                    <div class="relative">
-                                        <input
-                                            id="berat_barang_dibongkar"
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            name="berat_barang_dibongkar"
-                                            value="{{ old('berat_barang_dibongkar') }}"
-                                            placeholder="Contoh: 200"
-                                            required
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 shadow-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
-                                        >
-                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">kg</span>
-                                    </div>
-
-                                    <p class="text-sm text-slate-500 dark:text-zinc-400">
-                                        Masukkan berat bersih barang yang selesai dibongkar. Sistem akan menghitung sisa berat sebagai acuan timbang berikutnya.
-                                    </p>
-                                @endif
+                                <p class="text-sm text-slate-500 dark:text-zinc-400">
+                                    Masukkan berat barang yang baru selesai dibongkar. Sistem akan mengurangi dari berat terakhir:
+                                    <strong class="tabular-nums">{{ number_format($beratTerakhir, 2, ',', '.') }} kg</strong>.
+                                </p>
                             </div>
                         </div>
 
-                        {{-- Preview kalkulasi --}}
-                        <div class="rounded-2xl border border-teal-100 bg-teal-50 p-5 dark:border-teal-900/30 dark:bg-teal-900/10 grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <p class="text-sm font-semibold text-teal-800 dark:text-teal-300">Preview berat bersih barang:</p>
-                                <p class="mt-2 text-2xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
-                                    <span id="preview_berat_bersih">0,00</span> kg
-                                </p>
-                                <p class="mt-2 text-sm text-teal-500 dark:text-teal-400/80">
-                                    @if ($isSingleItem)
-                                        Hasil = timbang pertama &minus; berat kendaraan akhir.
-                                    @else
-                                        Sesuai dengan angka yang Anda input.
-                                    @endif
-                                </p>
-                            </div>
+                        <div class="rounded-2xl border border-teal-100 bg-teal-50 p-5 dark:border-teal-900/30 dark:bg-teal-900/10">
+                            <p class="text-sm font-semibold text-teal-800 dark:text-teal-300">
+                                Preview sisa berat setelah bongkar:
+                            </p>
 
-                            <div>
-                                <p class="text-sm font-semibold text-teal-800 dark:text-teal-300">
-                                    @if ($isSingleItem)
-                                        Berat kendaraan akhir:
-                                    @else
-                                        Sisa berat setelah bongkar:
-                                    @endif
-                                </p>
-                                <p class="mt-2 text-2xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
-                                    <span id="preview_sisa_berat">0,00</span> kg
-                                </p>
-                                <p class="mt-2 text-sm text-teal-500 dark:text-teal-400/80">
-                                    @if ($isSingleItem)
-                                        Nilai yang Anda input sebagai timbangan kedua.
-                                    @else
-                                        Rumus: berat sebelumnya ({{ number_format($beratTerakhir, 2, ',', '.') }} kg) &minus; berat bersih barang.
-                                    @endif
-                                </p>
-                            </div>
+                            <p class="mt-2 text-2xl font-bold text-teal-600 dark:text-teal-400 tabular-nums">
+                                <span id="preview_sisa_berat">{{ number_format($beratTerakhir, 2, ',', '.') }}</span> kg
+                            </p>
+
+                            <p class="mt-2 text-sm text-teal-500 dark:text-teal-400/80">
+                                Rumus: berat terakhir - berat barang yang dibongkar.
+                            </p>
                         </div>
 
                         <div class="space-y-2">
-                            <label for="catatan" class="text-sm font-medium text-slate-700 dark:text-zinc-300">Catatan</label>
+                            <label for="catatan" class="text-sm font-medium text-slate-700 dark:text-zinc-300">
+                                Catatan
+                            </label>
+
                             <textarea
                                 id="catatan"
                                 name="catatan"
@@ -337,6 +270,7 @@
                             class="mt-5"
                         >
                             @csrf
+
                             <button
                                 type="submit"
                                 class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
@@ -351,8 +285,13 @@
             {{-- Riwayat timbang --}}
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Riwayat Timbang Bertahap</h2>
-                    <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">Setiap baris menunjukkan hasil bongkar satu jenis kertas.</p>
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">
+                        Riwayat Timbang Bertahap
+                    </h2>
+
+                    <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+                        Setiap baris menunjukkan hasil bongkar satu jenis kertas.
+                    </p>
                 </div>
 
                 <div class="space-y-4">
@@ -364,30 +303,33 @@
                                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
                                             Timbang {{ $riwayat->urutan_timbang }} - {{ $riwayat->nama_barang }}
                                         </h3>
+
                                         <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-300">
                                             Selesai
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Kode: {{ $riwayat->kode_barang }}</p>
+
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        Kode: {{ $riwayat->kode_barang }}
+                                    </p>
+
                                     @if ($riwayat->catatan)
-                                        <p class="mt-2 text-sm text-slate-600 dark:text-zinc-400">Catatan: {{ $riwayat->catatan }}</p>
+                                        <p class="mt-2 text-sm text-slate-600 dark:text-zinc-400">
+                                            Catatan: {{ $riwayat->catatan }}
+                                        </p>
                                     @endif
                                 </div>
 
                                 <div class="grid gap-3 text-sm sm:grid-cols-3 lg:min-w-[520px]">
                                     <div class="rounded-xl bg-slate-50 p-4 dark:bg-zinc-950 border border-slate-100 dark:border-zinc-900 shadow-sm">
-                                        <p class="text-slate-500 dark:text-zinc-400">
-                                            @if ($isSingleItem) Timbang Pertama @else Sebelum Bongkar @endif
-                                        </p>
+                                        <p class="text-slate-500 dark:text-zinc-400">Sebelum Bongkar</p>
                                         <p class="mt-1 font-semibold text-slate-900 dark:text-white tabular-nums">
                                             {{ number_format($riwayat->berat_kotor, 2, ',', '.') }} kg
                                         </p>
                                     </div>
 
                                     <div class="rounded-xl bg-slate-50 p-4 dark:bg-zinc-950 border border-slate-100 dark:border-zinc-900 shadow-sm">
-                                        <p class="text-slate-500 dark:text-zinc-400">
-                                            @if ($isSingleItem) Timbang Kedua @else Setelah Bongkar @endif
-                                        </p>
+                                        <p class="text-slate-500 dark:text-zinc-400">Setelah Bongkar</p>
                                         <p class="mt-1 font-semibold text-slate-900 dark:text-white tabular-nums">
                                             {{ number_format($riwayat->tara, 2, ',', '.') }} kg
                                         </p>
@@ -404,7 +346,10 @@
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center dark:border-zinc-700">
-                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Belum ada riwayat timbang</h3>
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
+                                Belum ada riwayat timbang
+                            </h3>
+
                             <p class="mt-2 text-sm text-slate-500 dark:text-zinc-400">
                                 Riwayat akan muncul setelah proses bongkar pertama disimpan.
                             </p>
@@ -416,7 +361,10 @@
             {{-- Daftar detail barang --}}
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Daftar Jenis Kertas</h2>
+                    <h2 class="text-xl font-semibold text-slate-900 dark:text-white">
+                        Daftar Jenis Kertas
+                    </h2>
+
                     <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">
                         Total berat bersih akan terisi otomatis setelah jenis kertas selesai ditimbang.
                     </p>
@@ -428,7 +376,9 @@
                             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white dark:bg-zinc-900">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-3">
-                                        <h3 class="font-semibold text-slate-900 dark:text-white">{{ $detail->nama_barang }}</h3>
+                                        <h3 class="font-semibold text-slate-900 dark:text-white">
+                                            {{ $detail->nama_barang }}
+                                        </h3>
 
                                         @if ($detail->total_berat_bersih > 0)
                                             <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-300">
@@ -447,11 +397,17 @@
                                             QC: {{ ucfirst(str_replace('_', ' ', $detail->status_qc)) }}
                                         </span>
                                     </div>
-                                    <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">Kode: {{ $detail->kode_barang }}</p>
+
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+                                        Kode: {{ $detail->kode_barang }}
+                                    </p>
                                 </div>
 
                                 <div class="text-left md:text-right">
-                                    <p class="text-sm text-slate-500 dark:text-zinc-400">Berat Bersih</p>
+                                    <p class="text-sm text-slate-500 dark:text-zinc-400">
+                                        Berat Bersih
+                                    </p>
+
                                     <p class="mt-1 text-xl font-bold text-slate-900 dark:text-white tabular-nums">
                                         {{ number_format($detail->total_berat_bersih, 2, ',', '.') }} kg
                                     </p>
@@ -466,16 +422,9 @@
     </div>
 
     <script>
-    const isSingleItem        = document.getElementById('is_single_item')?.value === '1';
-    const beratTimbangPertama = parseFloat(document.getElementById('berat_timbang_pertama')?.value || 0);
-    const beratSebelumnya     = parseFloat(document.getElementById('berat_sebelumnya')?.value || 0);
-    const previewBeratBersih  = document.getElementById('preview_berat_bersih');
-    const previewSisaBerat    = document.getElementById('preview_sisa_berat');
-
-    // Active input differs by mode
-    const inputSingle = document.getElementById('berat_kendaraan_akhir');
-    const inputMulti  = document.getElementById('berat_barang_dibongkar');
-    const activeInput = isSingleItem ? inputSingle : inputMulti;
+    const beratSebelumnyaInput = document.getElementById('berat_sebelumnya');
+    const beratBarangInput = document.getElementById('berat_barang_dibongkar');
+    const previewSisaBerat = document.getElementById('preview_sisa_berat');
 
     function formatNumberId(value) {
         return new Intl.NumberFormat('id-ID', {
@@ -484,46 +433,21 @@
         }).format(value);
     }
 
-    function updatePreviewTimbang() {
-        if (!activeInput || !previewBeratBersih || !previewSisaBerat) return;
-
-        const inputVal = parseFloat(activeInput.value || 0);
-
-        if (isSingleItem) {
-            // Mode single item:
-            // preview kiri  = berat_bersih = berat_timbang_pertama - input
-            // preview kanan = berat_kendaraan_akhir = nilai input
-            if (inputVal >= beratTimbangPertama) {
-                activeInput.setCustomValidity(
-                    'Berat kendaraan akhir harus lebih kecil dari berat timbang pertama (' + formatNumberId(beratTimbangPertama) + ' kg).'
-                );
-            } else {
-                activeInput.setCustomValidity('');
-            }
-            const beratBersih = Math.max(beratTimbangPertama - inputVal, 0);
-            previewBeratBersih.textContent = formatNumberId(beratBersih);
-            previewSisaBerat.textContent   = formatNumberId(inputVal);
-
-        } else {
-            // Mode multi item:
-            // preview kiri  = berat_bersih = nilai input
-            // preview kanan = sisa_berat   = berat_sebelumnya - input
-            if (inputVal > beratSebelumnya) {
-                activeInput.setCustomValidity(
-                    'Berat bersih barang tidak boleh lebih besar dari berat sebelumnya (' + formatNumberId(beratSebelumnya) + ' kg).'
-                );
-            } else {
-                activeInput.setCustomValidity('');
-            }
-            previewBeratBersih.textContent = formatNumberId(inputVal);
-            const sisaBerat = Math.max(beratSebelumnya - inputVal, 0);
-            previewSisaBerat.textContent   = formatNumberId(sisaBerat);
+    function updatePreviewSisaBerat() {
+        if (!beratSebelumnyaInput || !beratBarangInput || !previewSisaBerat) {
+            return;
         }
+
+        const beratSebelumnya = parseFloat(beratSebelumnyaInput.value || 0);
+        const beratBarang = parseFloat(beratBarangInput.value || 0);
+        const sisaBerat = Math.max(beratSebelumnya - beratBarang, 0);
+
+        previewSisaBerat.textContent = formatNumberId(sisaBerat);
     }
 
-    if (activeInput) {
-        activeInput.addEventListener('input', updatePreviewTimbang);
-        updatePreviewTimbang();
+    if (beratBarangInput) {
+        beratBarangInput.addEventListener('input', updatePreviewSisaBerat);
+        updatePreviewSisaBerat();
     }
     </script>
 </x-layouts::app>

@@ -282,20 +282,7 @@ class PenimbangTransaksiService
 
     /**
      * Menyimpan timbang bertahap secara transactional.
-     *
-     * BRANCHING LOGIC berdasarkan jumlah detail barang pada transaksi:
-     *
-     * == MODE SINGLE ITEM (jumlah detail = 1) ==
-     *  - User menginput berat kendaraan akhir / timbangan kedua.
-     *  - Rumus: total_berat_bersih = berat_timbang_pertama - berat_kendaraan_akhir
-     *  - Contoh: 1650 - 1180 = 470
-     *  - Disimpan: berat_kotor=berat_timbang_pertama, tara=berat_kendaraan_akhir, berat_bersih=470
-     *
-     * == MODE MULTI ITEM (jumlah detail > 1) ==
-     *  - User menginput berat bersih barang yang dibongkar.
-     *  - Rumus sisa: sisa = berat_sebelumnya - berat_barang_dibongkar
-     *  - Contoh: 2200-200=2000, 2000-300=1700, 1700-600=1100
-     *  - Disimpan: berat_kotor=berat_sebelumnya, tara=sisa, berat_bersih=berat_barang_dibongkar
+     * Rumus: berat_bersih = berat_kotor - tara
      */
     public function simpanTimbangBertahap(int $transaksiId, array $data): void
     {
@@ -323,130 +310,62 @@ class PenimbangTransaksiService
             ]);
         }
 
-        // Cek jumlah detail barang untuk menentukan mode
-        $jumlahDetail = DB::table('detail_transaksi_barang')
-            ->where('transaksi_id', $transaksi->id)
-            ->count();
+        $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
+            ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
+            ->where('detail.transaksi_id', $transaksi->id)
+            ->orderByDesc('riwayat.urutan_timbang')
+            ->select('riwayat.*')
+            ->first();
 
-        $isSingleItem = ($jumlahDetail === 1);
+        $beratSebelumBongkar = $riwayatTerakhir
+            ? (float) $riwayatTerakhir->tara
+            : (float) $transaksi->berat_timbang_pertama;
+
+        $beratBarangDibongkar = (float) $data['berat_barang_dibongkar'];
+
+        if ($beratBarangDibongkar > $beratSebelumBongkar) {
+            throw ValidationException::withMessages([
+                'berat_barang_dibongkar' => 'Berat barang yang dibongkar tidak boleh lebih besar dari berat terakhir.',
+            ]);
+        }
+
+        $beratSetelahBongkar = round($beratSebelumBongkar - $beratBarangDibongkar, 2);
 
         $urutanTimbang = DB::table('riwayat_penimbangan_barang as riwayat')
             ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
             ->where('detail.transaksi_id', $transaksi->id)
             ->count() + 1;
 
-        if ($isSingleItem) {
-            // ---------------------------------------------------------------
-            // MODE SINGLE ITEM
-            // User menginput berat kendaraan akhir (timbangan kedua).
-            // Rumus: berat_bersih = berat_timbang_pertama - berat_kendaraan_akhir
-            // Contoh: 1650 - 1180 = 470
-            // ---------------------------------------------------------------
-            $beratKendaraanAkhir = (float) $data['berat_kendaraan_akhir'];
-            $beratTimbangPertama = (float) $transaksi->berat_timbang_pertama;
+        DB::transaction(function () use (
+            $detail,
+            $urutanTimbang,
+            $beratSebelumBongkar,
+            $beratSetelahBongkar,
+            $beratBarangDibongkar,
+            $data
+        ) {
+            DB::table('riwayat_penimbangan_barang')->insert([
+                'detail_transaksi_barang_id' => $detail->id,
+                'urutan_timbang' => $urutanTimbang,
+                'berat_kotor' => $beratSebelumBongkar,
+                'tara' => $beratSetelahBongkar,
+                'berat_bersih' => $beratBarangDibongkar,
+                'waktu_timbang' => now(),
+                'petugas_timbang_id' => auth()->id(),
+                'catatan' => $data['catatan'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-            if ($beratKendaraanAkhir >= $beratTimbangPertama) {
-                throw ValidationException::withMessages([
-                    'berat_kendaraan_akhir' => 'Berat kendaraan akhir harus lebih kecil dari berat timbang pertama (' . $beratTimbangPertama . ' kg).',
+            DB::table('detail_transaksi_barang')
+                ->where('id', $detail->id)
+                ->update([
+                    'total_berat_kotor' => $beratSebelumBongkar,
+                    'total_tara' => $beratSetelahBongkar,
+                    'total_berat_bersih' => $beratBarangDibongkar,
+                    'updated_at' => now(),
                 ]);
-            }
-
-            $beratBersih = round($beratTimbangPertama - $beratKendaraanAkhir, 2);
-
-            DB::transaction(function () use (
-                $detail,
-                $urutanTimbang,
-                $beratTimbangPertama,
-                $beratKendaraanAkhir,
-                $beratBersih,
-                $data
-            ) {
-                // berat_kotor = berat_timbang_pertama
-                // tara        = berat_kendaraan_akhir
-                // berat_bersih = selisih
-                DB::table('riwayat_penimbangan_barang')->insert([
-                    'detail_transaksi_barang_id' => $detail->id,
-                    'urutan_timbang'             => $urutanTimbang,
-                    'berat_kotor'                => $beratTimbangPertama,
-                    'tara'                       => $beratKendaraanAkhir,
-                    'berat_bersih'               => $beratBersih,
-                    'waktu_timbang'              => now(),
-                    'petugas_timbang_id'         => auth()->id(),
-                    'catatan'                    => $data['catatan'] ?? null,
-                    'created_at'                 => now(),
-                    'updated_at'                 => now(),
-                ]);
-
-                DB::table('detail_transaksi_barang')
-                    ->where('id', $detail->id)
-                    ->update([
-                        'total_berat_kotor'  => $beratTimbangPertama,
-                        'total_tara'         => $beratKendaraanAkhir,
-                        'total_berat_bersih' => $beratBersih,
-                        'updated_at'         => now(),
-                    ]);
-            });
-
-        } else {
-            // ---------------------------------------------------------------
-            // MODE MULTI ITEM
-            // User menginput berat bersih barang yang dibongkar per item.
-            // Rumus sisa: sisa = berat_sebelumnya - berat_barang_dibongkar
-            // Contoh: 2200-200=2000, 2000-300=1700, 1700-600=1100
-            // ---------------------------------------------------------------
-            $riwayatTerakhir = DB::table('riwayat_penimbangan_barang as riwayat')
-                ->join('detail_transaksi_barang as detail', 'riwayat.detail_transaksi_barang_id', '=', 'detail.id')
-                ->where('detail.transaksi_id', $transaksi->id)
-                ->orderByDesc('riwayat.urutan_timbang')
-                ->select('riwayat.*')
-                ->first();
-
-            $beratSebelumBongkar = $riwayatTerakhir
-                ? (float) $riwayatTerakhir->tara
-                : (float) $transaksi->berat_timbang_pertama;
-
-            $beratBarangDibongkar = (float) $data['berat_barang_dibongkar'];
-
-            if ($beratBarangDibongkar > $beratSebelumBongkar) {
-                throw ValidationException::withMessages([
-                    'berat_barang_dibongkar' => 'Berat bersih barang yang dibongkar tidak boleh lebih besar dari berat sebelumnya (' . $beratSebelumBongkar . ' kg).',
-                ]);
-            }
-
-            // sisa berat setelah bongkar
-            $sisaBeratSetelahBongkar = round($beratSebelumBongkar - $beratBarangDibongkar, 2);
-
-            DB::transaction(function () use (
-                $detail,
-                $urutanTimbang,
-                $beratSebelumBongkar,
-                $sisaBeratSetelahBongkar,
-                $beratBarangDibongkar,
-                $data
-            ) {
-                DB::table('riwayat_penimbangan_barang')->insert([
-                    'detail_transaksi_barang_id' => $detail->id,
-                    'urutan_timbang'             => $urutanTimbang,
-                    'berat_kotor'                => $beratSebelumBongkar,
-                    'tara'                       => $sisaBeratSetelahBongkar,
-                    'berat_bersih'               => $beratBarangDibongkar,
-                    'waktu_timbang'              => now(),
-                    'petugas_timbang_id'         => auth()->id(),
-                    'catatan'                    => $data['catatan'] ?? null,
-                    'created_at'                 => now(),
-                    'updated_at'                 => now(),
-                ]);
-
-                DB::table('detail_transaksi_barang')
-                    ->where('id', $detail->id)
-                    ->update([
-                        'total_berat_kotor'  => $beratSebelumBongkar,
-                        'total_tara'         => $sisaBeratSetelahBongkar,
-                        'total_berat_bersih' => $beratBarangDibongkar,
-                        'updated_at'         => now(),
-                    ]);
-            });
-        }
+        });
     }
 
     /**

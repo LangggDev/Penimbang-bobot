@@ -131,51 +131,16 @@ class PenimbangTransaksiController extends Controller
 
     /**
      * Menyimpan timbang bertahap per jenis kertas bekas.
-     *
-     * Mode ditentukan dari jumlah detail barang transaksi:
-     *  - Single item (1 detail): validasi berat_kendaraan_akhir
-     *  - Multi item (>1 detail): validasi berat_barang_dibongkar
      */
     public function simpanTimbangBertahap(Request $request, int $id)
     {
         abort_unless(auth()->user()->role === 'penimbang', 403);
 
-        $dataTimbangan = $this->transaksiService->getDetailTimbanganKedua($id);
-        $isSingleItem  = $dataTimbangan['detailBarang']->count() === 1;
-        $beratSebelumnya = $dataTimbangan['beratTerakhir'];
-        $beratTimbangPertama = (float) $dataTimbangan['transaksi']->berat_timbang_pertama;
-
-        if ($isSingleItem) {
-            $validated = $request->validate([
-                'detail_transaksi_barang_id' => ['required', 'exists:detail_transaksi_barang,id'],
-                'berat_kendaraan_akhir' => [
-                    'required',
-                    'numeric',
-                    'min:0.01',
-                    function ($attribute, $value, $fail) use ($beratTimbangPertama) {
-                        if ($value >= $beratTimbangPertama) {
-                            $fail("Berat kendaraan akhir harus lebih kecil dari berat timbang pertama ({$beratTimbangPertama} kg).");
-                        }
-                    },
-                ],
-                'catatan' => ['nullable', 'string'],
-            ]);
-        } else {
-            $validated = $request->validate([
-                'detail_transaksi_barang_id' => ['required', 'exists:detail_transaksi_barang,id'],
-                'berat_barang_dibongkar' => [
-                    'required',
-                    'numeric',
-                    'min:0.01',
-                    function ($attribute, $value, $fail) use ($beratSebelumnya) {
-                        if ($value > $beratSebelumnya) {
-                            $fail("Berat bersih barang yang dibongkar tidak boleh lebih besar dari berat sebelumnya ({$beratSebelumnya} kg).");
-                        }
-                    },
-                ],
-                'catatan' => ['nullable', 'string'],
-            ]);
-        }
+        $validated = $request->validate([
+            'detail_transaksi_barang_id' => ['required', 'exists:detail_transaksi_barang,id'],
+            'berat_barang_dibongkar' => ['required', 'numeric', 'min:0.01'],
+            'catatan' => ['nullable', 'string'],
+        ]);
 
         $this->transaksiService->simpanTimbangBertahap($id, $validated);
 
