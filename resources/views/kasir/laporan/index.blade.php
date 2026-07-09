@@ -1,4 +1,5 @@
 <x-layouts::app :title="'Laporan Kasir'">
+@php $showKasbon = false; @endphp
     <div class="px-6 py-6 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
@@ -13,7 +14,7 @@
                     </h1>
 
                     <p class="max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                        Rekap pembayaran transaksi, berat layak, total transaksi, potongan kasbon, dan total dibayar ke pelanggan.
+                        Rekap pembayaran transaksi, berat layak, total transaksi, dan total dibayar ke pelanggan.
                     </p>
                 </div>
 
@@ -132,7 +133,10 @@
         <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Pelanggan</th>
         <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Berat Layak</th>
         <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Total Transaksi</th>
+        {{-- Kolom Potongan Kasbon: sembunyikan via feature flag --}}
+        @if ($showKasbon)
         <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Potongan Kasbon</th>
+        @endif
         <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">Dibayar</th>
         <th class="px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300">Metode</th>
         <th class="px-4 py-3 text-left font-semibold text-zinc-700 print:hidden dark:text-zinc-300">Aksi</th>
@@ -166,9 +170,12 @@
                 Rp{{ number_format($item->total_transaksi, 0, ',', '.') }}
             </td>
 
+            {{-- Cell Potongan Kasbon: sembunyikan via feature flag --}}
+            @if ($showKasbon)
             <td class="tabular-nums px-4 py-4 text-right text-zinc-600 dark:text-zinc-400">
                 Rp{{ number_format($item->potongan_kasbon, 0, ',', '.') }}
             </td>
+            @endif
 
             <td class="tabular-nums px-4 py-4 text-right font-semibold text-teal-700 dark:text-teal-400">
                 Rp{{ number_format($item->total_dibayar_ke_pelanggan, 0, ',', '.') }}
@@ -189,7 +196,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="10" class="px-4 py-14 text-center text-zinc-500 dark:text-zinc-400">
+            <td colspan="{{ $showKasbon ? 10 : 9 }}" class="px-4 py-14 text-center text-zinc-500 dark:text-zinc-400">
                 Belum ada data pembayaran pada periode ini.
             </td>
         </tr>
@@ -210,9 +217,12 @@
             Rp{{ number_format($summary->total_transaksi, 0, ',', '.') }}
         </td>
 
+        {{-- Footer Total Potongan Kasbon: sembunyikan via feature flag --}}
+        @if ($showKasbon)
         <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
             Rp{{ number_format($summary->total_potongan_kasbon, 0, ',', '.') }}
         </td>
+        @endif
 
         <td class="px-4 py-4 text-right text-zinc-900 dark:text-white">
             Rp{{ number_format($summary->total_dibayar_ke_pelanggan, 0, ',', '.') }}

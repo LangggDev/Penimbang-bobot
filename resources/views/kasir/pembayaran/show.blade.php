@@ -1,4 +1,5 @@
 <x-layouts::app :title="'Detail Pembayaran'">
+@php $showKasbon = false; @endphp
     <div class="px-6 py-6 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
@@ -279,10 +280,14 @@
                 </div>
 
                 {{-- GRID INFORMASI PEMBAYARAN + TOTAL --}}
+                {{-- Feature flag: set $showKasbon = true untuk mengaktifkan kembali fitur kasbon --}}
                 <div class="grid gap-5 lg:grid-cols-[1fr_360px]">
 
-                    {{-- KOLOM KIRI: Kasbon & Metode Pembayaran --}}
+                    {{-- KOLOM KIRI: Kasbon (opsional) & Metode Pembayaran --}}
                     <div class="space-y-5">
+
+                        {{-- Section Kasbon / Hutang Pelanggan --}}
+                        @if ($showKasbon)
                         <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                             <h2 class="text-xl font-semibold text-zinc-900 dark:text-white">
                                 Kasbon / Hutang Pelanggan
@@ -347,6 +352,10 @@
                                 <input type="hidden" name="potongan_kasbon" value="0">
                             @endif
                         </div>
+                        @else
+                        {{-- Kasbon dinonaktifkan via feature flag: kirim potongan_kasbon=0 ke backend --}}
+                        <input type="hidden" name="potongan_kasbon" value="0">
+                        @endif
 
                         <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                             <h2 class="text-xl font-semibold text-zinc-900 dark:text-white">
@@ -406,6 +415,8 @@
                                 </p>
                             </div>
 
+                            {{-- Card Potongan Kasbon: sembunyikan via feature flag --}}
+                            @if ($showKasbon)
                             <div class="rounded-xl bg-amber-50 p-4 dark:bg-amber-900/20">
                                 <p class="text-sm text-amber-700 dark:text-amber-300">
                                     Potongan Kasbon
@@ -415,6 +426,7 @@
                                     Rp0
                                 </p>
                             </div>
+                            @endif
 
                             <div class="rounded-xl bg-teal-50 p-5 dark:bg-teal-900/20">
                                 <p class="text-sm font-medium text-teal-700 dark:text-teal-300">
@@ -426,6 +438,8 @@
                                 </p>
                             </div>
 
+                            {{-- Card Sisa Kasbon Setelah Bayar: sembunyikan via feature flag --}}
+                            @if ($showKasbon)
                             <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-950">
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                                     Sisa Kasbon Setelah Bayar
@@ -435,6 +449,7 @@
                                     Rp0
                                 </p>
                             </div>
+                            @endif
 
                             <button
                                 type="submit"

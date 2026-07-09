@@ -1,4 +1,5 @@
 <x-layouts::app :title="'Dashboard Kasir'">
+@php $enableKasbon = false; @endphp
     <div class="px-6 py-6 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
@@ -56,7 +57,7 @@
             </div>
 
             {{-- Statistik --}}
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 {{ $enableKasbon ? 'xl:grid-cols-4' : 'xl:grid-cols-2' }}">
 
                 {{-- Card 1: Total Pembayaran --}}
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -102,7 +103,8 @@
                     </p>
                 </div>
 
-                {{-- Card 3: Total Kasbon --}}
+                {{-- Card 3: Total Kasbon (sembunyikan via feature flag) --}}
+                @if ($enableKasbon)
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
@@ -124,7 +126,7 @@
                     </p>
                 </div>
 
-                {{-- Card 4: Total Potongan Kasbon --}}
+                {{-- Card 4: Total Potongan Kasbon (sembunyikan via feature flag) --}}
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
@@ -145,6 +147,7 @@
                         Total potongan dari kasbon dalam pembayaran.
                     </p>
                 </div>
+                @endif
             </div>
 
             {{-- Pembayaran Terbaru --}}

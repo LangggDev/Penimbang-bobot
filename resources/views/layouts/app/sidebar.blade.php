@@ -92,6 +92,7 @@
                     @endif
 
                     @if (auth()->user()->role === 'kasir')
+                        @php $enableKasbon = false; @endphp
                         <flux:navlist.group :heading="__('Menu Kasir')" class="grid">
                             <flux:navlist.item
                                 icon="home"
@@ -110,6 +111,9 @@
                             >
                                 Pembayaran
                             </flux:navlist.item>
+
+                            {{-- Kasbon / Hutang: sembunyikan via feature flag --}}
+                            @if ($enableKasbon)
                             <flux:navlist.item
                                 icon="credit-card"
                                 :href="route('kasir.kasbon.index')"
@@ -118,6 +122,7 @@
                             >
                                 Kasbon / Hutang
                             </flux:navlist.item>
+                            @endif
 
                            <flux:navlist.item
                                 icon="document-chart-bar"

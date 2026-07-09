@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Qc;
 use App\Http\Controllers\Controller;
 use App\Services\QcPenilaianService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * QcPenilaianController
@@ -181,6 +182,81 @@ class QcPenilaianController extends Controller
         return view('qc.fuzzy.show', [
             'hasil'       => $data['hasil'],
             'perhitungan' => $data['perhitungan'],
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    // DASHBOARD
+    // -----------------------------------------------------------------------
+
+    /**
+     * Menampilkan dashboard QC dengan ringkasan status penilaian berdasarkan filter tanggal.
+     *
+     * Route: GET /qc/dashboard  (qc.dashboard)
+     */
+    public function dashboard(Request $request)
+    {
+        abort_unless(auth()->user()->role === 'qc', 403);
+
+        $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
+        $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());
+
+        $summary = [
+            'menunggu' => DB::table('detail_transaksi_barang as detail')
+                ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+                ->whereIn('transaksi.status', [
+                    'menunggu_qc',
+                    'proses_qc',
+                ])
+                ->where('detail.status_qc', 'belum_dinilai')
+                ->where('detail.total_berat_bersih', '>', 100)
+                ->count(),
+
+            'sudah_dinilai' => DB::table('detail_transaksi_barang as detail')
+                ->join('qc_penilaian as qc', 'detail.id', '=', 'qc.detail_transaksi_barang_id')
+                ->where('detail.status_qc', 'sudah_dinilai')
+                ->where('detail.total_berat_bersih', '>', 100)
+                ->whereBetween(DB::raw('DATE(qc.waktu_qc)'), [$tanggalMulai, $tanggalSelesai])
+                ->count(),
+
+            'revisi' => DB::table('detail_transaksi_barang as detail')
+                ->join('qc_penilaian as qc', 'detail.id', '=', 'qc.detail_transaksi_barang_id')
+                ->where('detail.status_qc', 'revisi')
+                ->where('detail.total_berat_bersih', '>', 100)
+                ->whereBetween(DB::raw('DATE(qc.waktu_qc)'), [$tanggalMulai, $tanggalSelesai])
+                ->count(),
+        ];
+
+        $detailTerbaru = DB::table('detail_transaksi_barang as detail')
+            ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+            ->join('jenis_kertas_bekas as kertas', 'detail.jenis_kertas_bekas_id', '=', 'kertas.id')
+            ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
+            ->select(
+                'detail.id as detail_id',
+                'detail.status_qc',
+                'transaksi.kode_transaksi',
+                'transaksi.tanggal_transaksi',
+                'transaksi.berat_timbang_pertama',
+                'pelanggan.nama_pelanggan',
+                'kertas.nama_barang as nama_kertas',
+                'kendaraan.nama_kendaraan'
+            )
+            ->whereIn('transaksi.status', [
+                'menunggu_qc',
+                'proses_qc',
+            ])
+            ->where('detail.status_qc', 'belum_dinilai')
+            ->where('detail.total_berat_bersih', '>', 100)
+            ->orderByDesc('transaksi.tanggal_transaksi')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.qc', [
+            'summary'        => $summary,
+            'detailTerbaru'  => $detailTerbaru,
+            'tanggalMulai'   => $tanggalMulai,
+            'tanggalSelesai' => $tanggalSelesai,
         ]);
     }
 }

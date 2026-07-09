@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\HutangPelangganService;
 use App\Services\PembayaranService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KasirPembayaranController extends Controller
 {
@@ -341,5 +342,70 @@ class KasirPembayaranController extends Controller
         return redirect()
             ->route('kasir.kasbon.index')
             ->with('success', 'Kasbon pelanggan berhasil dihapus.');
+    }
+
+    // =========================================================================
+    // DASHBOARD
+    // =========================================================================
+
+    /**
+     * Menampilkan dashboard kasir dengan statistik pembayaran berdasarkan filter tanggal.
+     *
+     * Route: GET /kasir/dashboard  (kasir.dashboard)
+     */
+    public function dashboard(Request $request)
+    {
+        abort_unless(auth()->user()->role === 'kasir', 403);
+
+        $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
+        $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());
+
+        // Total Pembayaran
+        $totalPembayaran = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Dibayar Ke Pelanggan
+        $totalDibayarKePelanggan = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('total_dibayar_ke_pelanggan') ?? 0;
+
+        // Total Kasbon
+        $totalKasbon = DB::table('hutang_pelanggan')
+            ->whereBetween(DB::raw('DATE(tanggal_hutang)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Potongan Kasbon
+        $totalPotonganKasbon = DB::table('pembayaran')
+            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('potongan_kasbon') ?? 0;
+
+        // Pembayaran Terbaru (untuk periode yang dipilih)
+        $pembayaranTerbaru = DB::table('pembayaran as bayar')
+            ->join('transaksi_penimbangan as transaksi', 'bayar.transaksi_id', '=', 'transaksi.id')
+            ->join('pelanggan', 'bayar.pelanggan_id', '=', 'pelanggan.id')
+            ->select(
+                'bayar.id',
+                'bayar.kode_pembayaran',
+                'bayar.tanggal_bayar',
+                'bayar.total_transaksi',
+                'bayar.total_dibayar_ke_pelanggan',
+                'transaksi.kode_transaksi',
+                'pelanggan.nama_pelanggan'
+            )
+            ->whereBetween(DB::raw('DATE(bayar.tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
+            ->orderByDesc('bayar.tanggal_bayar')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.kasir', [
+            'totalPembayaran'          => $totalPembayaran,
+            'totalDibayarKePelanggan'  => $totalDibayarKePelanggan,
+            'totalKasbon'              => $totalKasbon,
+            'totalPotonganKasbon'      => $totalPotonganKasbon,
+            'pembayaranTerbaru'        => $pembayaranTerbaru,
+            'tanggalMulai'             => $tanggalMulai,
+            'tanggalSelesai'           => $tanggalSelesai,
+        ]);
     }
 }

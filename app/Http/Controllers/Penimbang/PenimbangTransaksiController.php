@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Penimbang;
 use App\Http\Controllers\Controller;
 use App\Services\PenimbangTransaksiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * PenimbangTransaksiController
@@ -220,5 +221,73 @@ class PenimbangTransaksiController extends Controller
         $data = $this->transaksiService->getPrintAntrian($id);
 
         return view('penimbang.transaksi.print-antrian', $data);
+    }
+
+    /**
+     * Menampilkan dashboard penimbang dengan statistik transaksi berdasarkan filter tanggal.
+     *
+     * Route: GET /penimbang/dashboard  (penimbang.dashboard)
+     */
+    public function dashboard(Request $request)
+    {
+        abort_unless(auth()->user()->role === 'penimbang', 403);
+
+        $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
+        $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());
+
+        // Total Transaksi
+        $totalTransaksiHariIni = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Berat Bersih
+        $totalBeratBersihHariIni = DB::table('detail_transaksi_barang as detail')
+            ->join('transaksi_penimbangan as transaksi', 'detail.transaksi_id', '=', 'transaksi.id')
+            ->where('transaksi.petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->sum('detail.total_berat_bersih') ?? 0;
+
+        // Total Draft
+        $totalDraft = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->where('status', 'draft_penimbangan')
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Total Menunggu QC
+        $totalMenungguQc = DB::table('transaksi_penimbangan')
+            ->where('petugas_timbang_id', auth()->id())
+            ->where('status', 'menunggu_qc')
+            ->whereBetween(DB::raw('DATE(tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->count();
+
+        // Transaksi Terbaru (untuk periode yang dipilih)
+        $transaksiTerbaru = DB::table('transaksi_penimbangan as transaksi')
+            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+            ->join('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
+            ->select(
+                'transaksi.id',
+                'transaksi.kode_transaksi',
+                'transaksi.tanggal_transaksi',
+                'transaksi.status',
+                'pelanggan.nama_pelanggan',
+                'jenis_kendaraan.nama_kendaraan'
+            )
+            ->where('transaksi.petugas_timbang_id', auth()->id())
+            ->whereBetween(DB::raw('DATE(transaksi.tanggal_transaksi)'), [$tanggalMulai, $tanggalSelesai])
+            ->orderByDesc('transaksi.tanggal_transaksi')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.penimbang', [
+            'totalTransaksiHariIni'   => $totalTransaksiHariIni,
+            'totalBeratBersihHariIni' => $totalBeratBersihHariIni,
+            'totalDraft'              => $totalDraft,
+            'totalMenungguQc'         => $totalMenungguQc,
+            'transaksiTerbaru'        => $transaksiTerbaru,
+            'tanggalMulai'            => $tanggalMulai,
+            'tanggalSelesai'          => $tanggalSelesai,
+        ]);
     }
 }
