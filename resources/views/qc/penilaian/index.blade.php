@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Penilaian QC'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             <div class="space-y-2">
@@ -7,7 +7,7 @@
                     Menu QC
                 </p>
 
-                <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                     Penilaian QC
                 </h1>
 
@@ -29,7 +29,7 @@
                         Menunggu Penilaian
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['menunggu'] ?? 0, 0, ',', '.') }}
                     </h2>
                 </div>
@@ -39,7 +39,7 @@
                         Sudah Dinilai
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['sudah_dinilai'] ?? 0, 0, ',', '.') }}
                     </h2>
                 </div>
@@ -49,7 +49,7 @@
                         Revisi
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['revisi'] ?? 0, 0, ',', '.') }}
                     </h2>
                 </div>

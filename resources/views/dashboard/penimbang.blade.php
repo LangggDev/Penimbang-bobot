@@ -15,7 +15,7 @@
         $transaksiTerbaru = $transaksiTerbaru ?? collect();
     @endphp
 
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -25,7 +25,7 @@
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Dashboard Penimbang
                     </h1>
 
@@ -82,7 +82,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Transaksi Hari Ini
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalTransaksiHariIni, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -104,7 +104,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Berat Bersih Hari Ini
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalBeratBersihHariIni, 2, ',', '.') }}
                                 <span class="text-lg font-medium text-slate-500">kg</span>
                             </h2>
@@ -127,7 +127,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Draft Penimbangan
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalDraft, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -149,7 +149,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Menunggu QC
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalMenungguQc, 0, ',', '.') }}
                             </h2>
                         </div>

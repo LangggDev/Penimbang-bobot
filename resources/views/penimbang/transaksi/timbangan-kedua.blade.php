@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Timbang Bertahap'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-6xl space-y-8">
 
             @php
@@ -13,7 +13,7 @@
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         @if ($isSingleItem)
                             Proses Timbang &mdash; Single Item
                         @else
@@ -110,7 +110,7 @@
             <div class="grid gap-5 md:grid-cols-3">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-600">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Jenis Kertas</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ $detailBarang->count() }}
                     </h2>
                     <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Total jenis kertas dalam transaksi.</p>
@@ -118,7 +118,7 @@
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-green-600">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Sudah Ditimbang</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ $riwayatTimbang->count() }}
                     </h2>
                     <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Jenis kertas yang sudah selesai dibongkar.</p>
@@ -126,7 +126,7 @@
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-400">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Total Berat Bersih</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($totalBeratBersih, 2, ',', '.') }} kg
                     </h2>
                     <p class="mt-3 text-sm text-slate-500 dark:text-zinc-400">Akumulasi hasil bongkar bertahap.</p>
@@ -314,7 +314,7 @@
                         <div class="flex justify-end">
                             <button
                                 type="submit"
-                                class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+                                class="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
                             >
                                 Simpan Timbang Bertahap
                             </button>

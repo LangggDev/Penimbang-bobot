@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Dashboard QC'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -9,7 +9,7 @@
                         Menu Quality Control
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Dashboard QC
                     </h1>
 
@@ -62,7 +62,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Menunggu Penilaian</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['menunggu'] ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -82,7 +82,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Sudah Dinilai</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['sudah_dinilai'] ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -102,7 +102,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Revisi</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['revisi'] ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>

@@ -1,6 +1,6 @@
 <x-layouts::app :title="'Dashboard Kasir'">
 @php $enableKasbon = false; @endphp
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -10,7 +10,7 @@
                         Menu Kasir
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Dashboard Kasir
                     </h1>
 
@@ -66,7 +66,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Total Pembayaran
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalPembayaran ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -88,7 +88,7 @@
                             <p class="text-sm font-medium text-teal-700 dark:text-teal-400">
                                 Total Dibayar Ke Pelanggan
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-teal-800 dark:text-teal-300">
+                            <h2 class="tabular-nums text-2xl font-bold text-teal-800 sm:text-3xl dark:text-teal-300">
                                 Rp {{ number_format($totalDibayarKePelanggan ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -111,7 +111,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Total Kasbon
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($totalKasbon ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>
@@ -133,7 +133,7 @@
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 Total Potongan Kasbon
                             </p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 Rp {{ number_format($totalPotonganKasbon ?? 0, 0, ',', '.') }}
                             </h2>
                         </div>

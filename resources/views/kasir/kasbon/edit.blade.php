@@ -1,11 +1,11 @@
 <x-layouts::app :title="'Edit Kasbon'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-4xl space-y-8">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Menu Kasir</p>
-                    <h1 class="mt-2 text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    <h1 class="mt-2 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">
                         Edit Kasbon Pelanggan
                     </h1>
                 </div>

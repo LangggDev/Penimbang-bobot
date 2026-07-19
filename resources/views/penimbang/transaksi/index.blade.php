@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Transaksi Penimbangan'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -9,7 +9,7 @@
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Transaksi Penimbangan
                     </h1>
 
@@ -43,7 +43,7 @@
                         Total Transaksi
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['total'] ?? 0, 0, ',', '.') }}
                     </h2>
 
@@ -57,7 +57,7 @@
                         Draft
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['draft'] ?? 0, 0, ',', '.') }}
                     </h2>
 
@@ -71,7 +71,7 @@
                         Menunggu QC
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['menunggu_qc'] ?? 0, 0, ',', '.') }}
                     </h2>
 
@@ -85,7 +85,7 @@
                         Selesai
                     </p>
 
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['selesai'] ?? 0, 0, ',', '.') }}
                     </h2>
 

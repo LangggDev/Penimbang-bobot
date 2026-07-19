@@ -32,7 +32,7 @@
         $hasilAkhir = data_get($perhitungan, 'hasil_akhir', []);
     @endphp
 
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -42,7 +42,7 @@
                         Menu QC
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Detail Perhitungan Fuzzy Tsukamoto
                     </h1>
 

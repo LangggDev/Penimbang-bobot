@@ -22,7 +22,7 @@
         };
     @endphp
 
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -32,7 +32,7 @@
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Detail Transaksi
                     </h1>
 
@@ -158,35 +158,35 @@
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-600">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Jenis Kertas</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['jumlah_jenis'], 0, ',', '.') }}
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-green-600">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Total Bersih</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['total_berat_bersih'], 2, ',', '.') }} kg
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-teal-400">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Sudah QC</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['sudah_qc'], 0, ',', '.') }}
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-amber-500">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Belum QC</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['belum_qc'], 0, ',', '.') }}
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-l-4 border-l-purple-500">
                     <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Jumlah Timbang</p>
-                    <h2 class="mt-3 text-3xl font-bold text-slate-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['jumlah_timbang'], 0, ',', '.') }}
                     </h2>
                 </div>

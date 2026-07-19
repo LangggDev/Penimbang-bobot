@@ -1,10 +1,10 @@
 <x-layouts::app :title="'Detail Pembayaran'">
-    <div class="mx-auto max-w-7xl space-y-8 px-6 py-8 lg:px-8">
+    <div class="mx-auto max-w-7xl space-y-8 px-4 py-4 lg:px-8 lg:py-8">
 
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div class="space-y-2">
                 <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Menu Kasir</p>
-                <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Detail Pembayaran</h1>
+                <h1 class="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">Detail Pembayaran</h1>
                 <p class="max-w-3xl text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                     Detail transaksi pembayaran dan rincian barang.
                 </p>

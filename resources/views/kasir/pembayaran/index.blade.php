@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Pembayaran Kasir'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -8,7 +8,7 @@
                         Menu Kasir
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">
                         Transaksi Menunggu Pembayaran
                     </h1>
 
@@ -39,7 +39,7 @@
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Menunggu Pembayaran
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['menunggu_pembayaran'], 0, ',', '.') }}
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
@@ -51,7 +51,7 @@
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Total Berat Layak Pending
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['total_berat_layak_pending'], 2, ',', '.') }} kg
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
@@ -63,7 +63,7 @@
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         Pembayaran Tersimpan
                     </p>
-                    <h2 class="mt-3 text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['sudah_dibayar'], 0, ',', '.') }}
                     </h2>
                     <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">

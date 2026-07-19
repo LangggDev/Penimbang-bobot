@@ -1,6 +1,6 @@
 <x-layouts::app :title="'Detail Pembayaran'">
 @php $showKasbon = false; @endphp
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -9,7 +9,7 @@
                         Menu Kasir
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">
                         Detail Pembayaran
                     </h1>
 
@@ -433,7 +433,7 @@
                                     Dibayar ke Pelanggan
                                 </p>
 
-                                <p id="total-dibayar-pelanggan" class="mt-2 tabular-nums text-3xl font-bold text-teal-950 dark:text-teal-100">
+                                <p id="total-dibayar-pelanggan" class="mt-2 tabular-nums text-2xl font-bold text-teal-950 sm:text-3xl dark:text-teal-100">
                                     Rp0
                                 </p>
                             </div>

@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Data Pelanggan'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             {{-- Header --}}
@@ -9,7 +9,7 @@
                         Menu Penimbang
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                         Data Pelanggan
                     </h1>
 
@@ -39,7 +39,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Total Pelanggan</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['total'], 0, ',', '.') }}
                             </h2>
                         </div>
@@ -55,7 +55,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Pelanggan Aktif</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['aktif'], 0, ',', '.') }}
                             </h2>
                         </div>
@@ -71,7 +71,7 @@
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-3">
                             <p class="text-sm font-medium text-slate-500 dark:text-zinc-400">Pelanggan Nonaktif</p>
-                            <h2 class="tabular-nums text-3xl font-bold text-slate-900 dark:text-white">
+                            <h2 class="tabular-nums text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
                                 {{ number_format($summary['nonaktif'], 0, ',', '.') }}
                             </h2>
                         </div>
@@ -86,7 +86,7 @@
 
             {{-- Filter --}}
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <form method="GET" class="grid gap-4 lg:grid-cols-[1fr_220px_auto] lg:items-end">
+                <form method="GET" class="grid gap-4 md:grid-cols-2 lg:grid-cols-[1fr_220px_auto] lg:items-end">
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-slate-700 dark:text-zinc-300">
                             Cari Pelanggan
@@ -116,17 +116,17 @@
                         </select>
                     </div>
 
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 md:col-span-2 lg:col-span-1 lg:self-end">
                         <button
                             type="submit"
-                            class="rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+                            class="flex-1 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
                         >
                             Cari
                         </button>
 
                         <a
                             href="{{ route('penimbang.pelanggan.index') }}"
-                            class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                            class="flex-1 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 text-center transition hover:bg-slate-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
                         >
                             Reset
                         </a>

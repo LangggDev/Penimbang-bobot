@@ -1,5 +1,5 @@
 <x-layouts::app :title="'Kasbon / Hutang Pelanggan'">
-    <div class="px-6 py-6 lg:px-8 lg:py-8">
+    <div class="px-4 py-4 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl space-y-8">
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -8,7 +8,7 @@
                         Menu Kasir
                     </p>
 
-                    <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                    <h1 class="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl dark:text-white">
                         Kasbon / Hutang Pelanggan
                     </h1>
 
@@ -44,21 +44,21 @@
             <div class="grid gap-5 md:grid-cols-3">
                 <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Kasbon Aktif</p>
-                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['belum_lunas'], 0, ',', '.') }}
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Kasbon Lunas</p>
-                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-zinc-900 dark:text-white">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-zinc-900 sm:text-3xl dark:text-white">
                         {{ number_format($summary['lunas'], 0, ',', '.') }}
                     </h2>
                 </div>
 
                 <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 border-t-4 border-t-teal-600">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Sisa Kasbon</p>
-                    <h2 class="mt-3 tabular-nums text-3xl font-bold text-teal-700 dark:text-teal-400">
+                    <h2 class="mt-3 tabular-nums text-2xl font-bold text-teal-700 sm:text-3xl dark:text-teal-400">
                         Rp{{ number_format($summary['total_sisa_hutang'], 0, ',', '.') }}
                     </h2>
                 </div>
@@ -72,7 +72,7 @@
             </div>
 
             <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <form method="GET" class="grid gap-4 md:grid-cols-[1fr_220px_auto_auto] md:items-end">
+                <form method="GET" class="grid gap-4 sm:grid-cols-2 md:grid-cols-[1fr_220px_auto_auto] md:items-end">
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                             Cari
@@ -100,19 +100,21 @@
                         </select>
                     </div>
 
-                    <button
-                        type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
-                    >
-                        Terapkan
-                    </button>
+                    <div class="flex gap-3 sm:col-span-2 md:col-span-1 md:self-end">
+                        <button
+                            type="submit"
+                            class="flex-1 inline-flex items-center justify-center rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 dark:bg-teal-600 dark:text-white dark:hover:bg-teal-700"
+                        >
+                            Terapkan
+                        </button>
 
-                    <a
-                        href="{{ route('kasir.kasbon.index') }}"
-                        class="inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-                    >
-                        Reset
-                    </a>
+                        <a
+                            href="{{ route('kasir.kasbon.index') }}"
+                            class="flex-1 inline-flex items-center justify-center rounded-xl border border-zinc-300 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                        >
+                            Reset
+                        </a>
+                    </div>
                 </form>
             </div>
 
