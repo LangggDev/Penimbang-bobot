@@ -168,7 +168,7 @@
                                 <div class="space-y-2">
                                     <div class="flex flex-wrap items-center gap-3">
                                         <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-                                            {{ $pembayaran->kode_pembayaran }}
+                                            {{ $pembayaran->kode_pembayaran ?? $pembayaran->no_pembayaran ?? 'PMB-001' }}
                                         </h3>
                                         <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                             Selesai
@@ -176,14 +176,14 @@
                                     </div>
 
                                     <div class="space-y-0.5 text-sm text-slate-500 dark:text-zinc-400">
-                                        <p>Transaksi: {{ $pembayaran->kode_transaksi }}</p>
-                                        <p>Pelanggan: {{ $pembayaran->nama_pelanggan }}</p>
+                                        <p>Transaksi: {{ $pembayaran->kode_transaksi ?? $pembayaran->no_transaksi ?? '-' }}</p>
+                                        <p>Pelanggan: {{ $pembayaran->nama_pelanggan ?? 'Pelanggan' }}</p>
                                         <p>
                                             Tanggal:
-                                            {{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->translatedFormat('d F Y') }}
+                                            {{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar ?? $pembayaran->created_at ?? now())->translatedFormat('d F Y') }}
                                         </p>
                                         <p class="font-semibold text-slate-700 dark:text-zinc-300">
-                                            Pembayaran: <span class="tabular-nums">Rp {{ number_format($pembayaran->total_transaksi, 0, ',', '.') }}</span>
+                                            Pembayaran: <span class="tabular-nums">Rp {{ number_format($pembayaran->total_transaksi ?? $pembayaran->total_pembayaran ?? $pembayaran->jumlah_bayar ?? 0, 0, ',', '.') }}</span>
                                         </p>
                                     </div>
                                 </div>
