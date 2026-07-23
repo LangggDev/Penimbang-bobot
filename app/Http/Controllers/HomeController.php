@@ -30,20 +30,21 @@ class HomeController extends Controller
     public function redirectDashboard()
     {
         $user = auth()->user();
+        $role = strtolower($user->role ?? '');
 
-        if ($user->role === 'qc') {
+        if ($role === 'qc') {
             return redirect()->route('qc.dashboard');
         }
 
-        if ($user->role === 'penimbang') {
+        if ($role === 'penimbang') {
             return redirect()->route('penimbang.dashboard');
         }
 
-        if ($user->role === 'kasir') {
+        if ($role === 'kasir') {
             return redirect()->route('kasir.dashboard');
         }
 
-        abort(403, 'Role tidak dikenali.');
+        return redirect()->route('login');
     }
 
     /**

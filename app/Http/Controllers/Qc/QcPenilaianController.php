@@ -37,7 +37,7 @@ class QcPenilaianController extends Controller
      */
     public function index()
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $detailMenungguQc = $this->qcService->getDaftarMenungguQc();
         $summary = $this->qcService->getSummaryPenilaian();
@@ -55,7 +55,7 @@ class QcPenilaianController extends Controller
      */
     public function create(int $detailId)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $detail = $this->qcService->getDetailUntukPenilaian($detailId);
 
@@ -72,7 +72,7 @@ class QcPenilaianController extends Controller
      */
     public function store(Request $request, int $detailId)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $validated = $request->validate([
             'nilai_kualitas_kertas' => ['required', 'numeric', 'min:1', 'max:10'],
@@ -97,7 +97,7 @@ class QcPenilaianController extends Controller
      */
     public function riwayatIndex(Request $request)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $keyword = $request->get('q');
         $riwayatQc = $this->qcService->getRiwayatPenilaian($keyword);
@@ -115,7 +115,7 @@ class QcPenilaianController extends Controller
      */
     public function riwayatEdit(int $qcId)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $qc = $this->qcService->getDetailRiwayatEdit($qcId);
 
@@ -131,7 +131,7 @@ class QcPenilaianController extends Controller
      */
     public function riwayatUpdate(Request $request, int $qcId)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $validated = $request->validate([
             'nilai_kualitas_kertas' => ['required', 'numeric', 'min:1', 'max:10'],
@@ -157,7 +157,7 @@ class QcPenilaianController extends Controller
      */
     public function fuzzyIndex(Request $request)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $keyword = $request->get('q');
         $hasilFuzzy = $this->qcService->getDaftarHasilFuzzy($keyword);
@@ -175,7 +175,7 @@ class QcPenilaianController extends Controller
      */
     public function fuzzyShow(int $fuzzyId)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $data = $this->qcService->getDetailHasilFuzzy($fuzzyId);
 
@@ -196,7 +196,7 @@ class QcPenilaianController extends Controller
      */
     public function dashboard(Request $request)
     {
-        abort_unless(auth()->user()->role === 'qc', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'qc', 403);
 
         $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
         $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());

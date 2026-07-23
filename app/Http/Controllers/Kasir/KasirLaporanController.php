@@ -17,7 +17,7 @@ class KasirLaporanController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $tanggalAwal  = $request->input('tanggal_awal', now()->startOfMonth()->toDateString());
         $tanggalAkhir = $request->input('tanggal_akhir', now()->toDateString());
@@ -38,7 +38,7 @@ class KasirLaporanController extends Controller
      */
     public function detail(int $id)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $pembayaran  = $this->laporanService->getDetailPembayaran($id);
 
@@ -57,7 +57,7 @@ class KasirLaporanController extends Controller
      */
     public function print(int $id)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $pembayaran = $this->laporanService->getDetailPembayaran($id);
 

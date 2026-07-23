@@ -24,7 +24,7 @@ class KasirPembayaranController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $keyword = $request->input('q');
 
@@ -45,7 +45,7 @@ class KasirPembayaranController extends Controller
      */
     public function show(int $transaksiId)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $transaksi = $this->pembayaranService->getTransaksiUntukPembayaran($transaksiId);
 
@@ -78,7 +78,7 @@ class KasirPembayaranController extends Controller
      */
     public function store(Request $request, int $transaksiId)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $transaksi = \Illuminate\Support\Facades\DB::table('transaksi_penimbangan')
             ->where('id', $transaksiId)
@@ -198,7 +198,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonIndex(Request $request)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $keyword = $request->input('q');
         $status  = $request->input('status', 'semua');
@@ -219,7 +219,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonCreate()
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $pelanggan = \Illuminate\Support\Facades\DB::table('pelanggan')
             ->where('status', 'aktif')
@@ -236,7 +236,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonStore(Request $request)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $request->validate([
             'pelanggan_id'   => ['required', 'exists:pelanggan,id'],
@@ -270,7 +270,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonEdit(int $id)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $hutang = $this->hutangService->findKasbonDenganPelanggan($id);
 
@@ -289,7 +289,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonUpdate(Request $request, int $id)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $hutang = \Illuminate\Support\Facades\DB::table('hutang_pelanggan')
             ->where('id', $id)
@@ -323,7 +323,7 @@ class KasirPembayaranController extends Controller
      */
     public function kasbonDestroy(int $id)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $hutang = \Illuminate\Support\Facades\DB::table('hutang_pelanggan')
             ->where('id', $id)
@@ -355,7 +355,7 @@ class KasirPembayaranController extends Controller
      */
     public function dashboard(Request $request)
     {
-        abort_unless(auth()->user()->role === 'kasir', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'kasir', 403);
 
         $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
         $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());

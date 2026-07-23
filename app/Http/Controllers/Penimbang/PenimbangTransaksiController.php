@@ -26,7 +26,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $status = $request->get('status', 'semua');
         $transaksi = $this->transaksiService->getDaftarTransaksi($status);
@@ -44,7 +44,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function create()
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pelanggan = $this->transaksiService->getPelangganAktif();
         $jenisKendaraan = $this->transaksiService->getJenisKendaraanAktif();
@@ -60,7 +60,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $validated = $request->validate([
             'pelanggan_id' => ['required', 'exists:pelanggan,id'],
@@ -81,7 +81,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function timbanganPertama(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pelanggan = $this->transaksiService->getPelangganUntukTimbanganPertama($id);
         $jenisKendaraan = $this->transaksiService->getJenisKendaraanAktif();
@@ -99,7 +99,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function simpanTimbanganPertama(Request $request, int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $validated = $request->validate([
             'jenis_kendaraan_id' => ['required', 'exists:jenis_kendaraan,id'],
@@ -123,7 +123,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function timbanganKedua(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $data = $this->transaksiService->getDetailTimbanganKedua($id);
 
@@ -139,7 +139,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function simpanTimbangBertahap(Request $request, int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $dataTimbangan = $this->transaksiService->getDetailTimbanganKedua($id);
         $isSingleItem  = $dataTimbangan['detailBarang']->count() === 1;
@@ -190,7 +190,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function selesaiPenimbangan(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pesan = $this->transaksiService->selesaiPenimbangan($id);
 
@@ -204,7 +204,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function detail(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $data = $this->transaksiService->getDetailTransaksi($id);
 
@@ -216,7 +216,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function printAntrian(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $data = $this->transaksiService->getPrintAntrian($id);
 
@@ -230,7 +230,7 @@ class PenimbangTransaksiController extends Controller
      */
     public function dashboard(Request $request)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
         $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());

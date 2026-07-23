@@ -24,7 +24,7 @@ class PenimbangPelangganController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $keyword = $request->input('q');
         $status  = $request->input('status', 'aktif');
@@ -80,7 +80,7 @@ class PenimbangPelangganController extends Controller
      */
     public function create()
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $tanggal = now()->format('Ymd');
 
@@ -102,7 +102,7 @@ class PenimbangPelangganController extends Controller
      */
     public function store(Request $request)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $request->validate([
             'kode_pelanggan' => ['required', 'string', 'max:50'],
@@ -133,7 +133,7 @@ class PenimbangPelangganController extends Controller
      */
     public function edit(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pelanggan = DB::table('pelanggan')->where('id', $id)->first();
 
@@ -151,7 +151,7 @@ class PenimbangPelangganController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pelanggan = DB::table('pelanggan')->where('id', $id)->first();
 
@@ -187,7 +187,7 @@ class PenimbangPelangganController extends Controller
      */
     public function destroy(int $id)
     {
-        abort_unless(auth()->user()->role === 'penimbang', 403);
+        abort_unless(strtolower(auth()->user()->role ?? '') === 'penimbang', 403);
 
         $pelanggan = DB::table('pelanggan')->where('id', $id)->first();
 
