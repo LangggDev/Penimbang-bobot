@@ -10,6 +10,12 @@ if (!is_dir($tmpStorage)) {
     mkdir($tmpStorage . '/logs', 0777, true);
 }
 
+// Create empty SQLite database if not exists in /tmp
+$tmpDb = '/tmp/database.sqlite';
+if (!file_exists($tmpDb)) {
+    touch($tmpDb);
+}
+
 // Override storage path in Laravel
 putenv('APP_CONFIG_CACHE=/tmp/config.php');
 putenv('APP_EVENTS_CACHE=/tmp/events.php');
