@@ -53,6 +53,7 @@ return new class extends Migration
                 $table->string('no_hp', 50)->nullable();
                 $table->text('alamat')->nullable();
                 $table->enum('kategori', ['setia', 'biasa', 'baru'])->default('biasa');
+                $table->enum('status', ['aktif', 'nonaktif'])->default('aktif');
                 $table->timestamps();
             });
         }
@@ -79,17 +80,40 @@ return new class extends Migration
             });
         }
 
-        // transaksi
+        // transaksi & transaksi_penimbangan
         if (!Schema::hasTable('transaksi')) {
             Schema::create('transaksi', function (Blueprint $table) {
                 $table->id();
-                $table->string('no_transaksi')->unique();
+                $table->string('no_transaksi')->nullable();
                 $table->foreignId('pelanggan_id')->nullable();
+                $table->foreignId('user_penimbang_id')->nullable();
+                $table->foreignId('petugas_timbang_id')->nullable();
+                $table->enum('jenis_kendaraan', ['K1', 'K2', 'K3'])->default('K1');
+                $table->integer('bobot_kendaraan_id')->default(1);
+                $table->string('status')->default('timbang_1');
+                $table->string('status_transaksi')->default('timbang_1');
+                $table->string('status_pembayaran')->default('belum_dibayar');
+                $table->timestamp('tanggal_transaksi')->useCurrent();
+                $table->timestamp('waktu_masuk')->nullable();
+                $table->timestamp('waktu_keluar')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('transaksi_penimbangan')) {
+            Schema::create('transaksi_penimbangan', function (Blueprint $table) {
+                $table->id();
+                $table->string('no_transaksi')->nullable();
+                $table->string('kode_transaksi')->nullable();
+                $table->foreignId('pelanggan_id')->nullable();
+                $table->foreignId('petugas_timbang_id')->nullable();
                 $table->foreignId('user_penimbang_id')->nullable();
                 $table->enum('jenis_kendaraan', ['K1', 'K2', 'K3'])->default('K1');
                 $table->integer('bobot_kendaraan_id')->default(1);
-                $table->enum('status_transaksi', ['timbang_1', 'timbang_2', 'selesai_timbang', 'selesai_pembayaran', 'batal'])->default('timbang_1');
-                $table->enum('status_pembayaran', ['belum_dibayar', 'sudah_dibayar', 'kasbon'])->default('belum_dibayar');
+                $table->string('status')->default('draft_penimbangan');
+                $table->string('status_transaksi')->default('draft_penimbangan');
+                $table->string('status_pembayaran')->default('belum_dibayar');
+                $table->timestamp('tanggal_transaksi')->useCurrent();
                 $table->timestamp('waktu_masuk')->nullable();
                 $table->timestamp('waktu_keluar')->nullable();
                 $table->timestamps();
@@ -158,7 +182,7 @@ return new class extends Migration
         if (!Schema::hasTable('pembayaran')) {
             Schema::create('pembayaran', function (Blueprint $table) {
                 $table->id();
-                $table->string('no_pembayaran')->unique();
+                $table->string('no_pembayaran')->nullable();
                 $table->foreignId('transaksi_id');
                 $table->foreignId('user_kasir_id')->nullable();
                 $table->decimal('total_berat_bersih', 12, 2)->default(0);
@@ -193,9 +217,22 @@ return new class extends Migration
             });
         }
 
-        // kasbon_pelanggan
+        // kasbon_pelanggan & hutang_pelanggan
         if (!Schema::hasTable('kasbon_pelanggan')) {
             Schema::create('kasbon_pelanggan', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('pelanggan_id');
+                $table->foreignId('pembayaran_id')->nullable();
+                $table->decimal('jumlah_kasbon', 15, 2)->default(0);
+                $table->decimal('sisa_kasbon', 15, 2)->default(0);
+                $table->enum('status', ['belum_lunas', 'lunas'])->default('belum_lunas');
+                $table->text('keterangan')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('hutang_pelanggan')) {
+            Schema::create('hutang_pelanggan', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('pelanggan_id');
                 $table->foreignId('pembayaran_id')->nullable();
@@ -213,6 +250,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('hutang_pelanggan');
         Schema::dropIfExists('kasbon_pelanggan');
         Schema::dropIfExists('detail_pembayaran_barang');
         Schema::dropIfExists('pembayaran');
@@ -220,6 +258,7 @@ return new class extends Migration
         Schema::dropIfExists('penilaian_qc');
         Schema::dropIfExists('timbangan_detail');
         Schema::dropIfExists('detail_transaksi_barang');
+        Schema::dropIfExists('transaksi_penimbangan');
         Schema::dropIfExists('transaksi');
         Schema::dropIfExists('pemilik');
         Schema::dropIfExists('mitra_pengepul');
