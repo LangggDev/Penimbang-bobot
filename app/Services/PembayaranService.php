@@ -44,48 +44,6 @@ class PembayaranService
             return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
         }
     }
-            )
-            ->whereIn('transaksi.status', [
-                'draft_penimbangan',
-                'menunggu_qc',
-                'proses_qc',
-                'menunggu_pembayaran',
-            ])
-            ->whereNull('pembayaran.id')
-            ->groupBy(
-                'transaksi.id',
-                'transaksi.kode_transaksi',
-                'transaksi.tanggal_transaksi',
-                'transaksi.status',
-                'transaksi.plat_kendaraan',
-                'pelanggan.nama_pelanggan',
-                'kendaraan.nama_kendaraan'
-            )
-            // wajib punya detail barang
-            ->havingRaw('COUNT(DISTINCT detail.id) > 0')
-            // tidak boleh ada detail yang berat bersihnya masih 0
-            ->havingRaw('SUM(CASE WHEN detail.total_berat_bersih <= 0 THEN 1 ELSE 0 END) = 0')
-            // semua barang harus siap bayar:
-            // <= 100 kg langsung siap, > 100 kg harus punya fuzzy
-            ->havingRaw("
-                COUNT(DISTINCT detail.id) =
-                COUNT(DISTINCT CASE
-                    WHEN fuzzy.id IS NOT NULL OR detail.total_berat_bersih <= 100
-                    THEN detail.id
-                END)
-            ")
-            ->orderByDesc('transaksi.tanggal_transaksi');
-
-        if ($keyword) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('transaksi.kode_transaksi', 'like', "%{$keyword}%")
-                    ->orWhere('pelanggan.nama_pelanggan', 'like', "%{$keyword}%")
-                    ->orWhere('transaksi.plat_kendaraan', 'like', "%{$keyword}%");
-            });
-        }
-
-        return $query;
-    }
 
     /**
      * Hitung summary untuk halaman index pembayaran.
