@@ -37,10 +37,10 @@ $app = require __DIR__ . '/../bootstrap/app.php';
 // Auto run migration & seeding on Vercel if needed
 if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL'])) {
     try {
-        if (!file_exists('/tmp/migrated.lock')) {
-            touch('/tmp/migrated.lock');
+        if (!file_exists('/tmp/seeded.lock')) {
+            touch('/tmp/seeded.lock');
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            (new \Database\Seeders\UserSeeder())->run();
         }
     } catch (\Throwable $e) {
         error_log('Vercel Migration Error: ' . $e->getMessage());

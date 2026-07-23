@@ -13,34 +13,25 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate(
-            ['name' => 'QC User'],
-            [
-                'email' => 'qc@gmail.com',
-                'password' => Hash::make('password123'),
-                'role' => 'qc',
-                'status' => 'aktif',
-            ]
-        );
+        $users = [
+            ['name' => 'QC User', 'email' => 'qc@gmail.com', 'role' => 'qc'],
+            ['name' => 'qc user', 'email' => 'qc2@gmail.com', 'role' => 'qc'],
+            ['name' => 'Penimbang User', 'email' => 'penimbang@gmail.com', 'role' => 'penimbang'],
+            ['name' => 'penimbang user', 'email' => 'penimbang2@gmail.com', 'role' => 'penimbang'],
+            ['name' => 'Kasir User', 'email' => 'kasir@gmail.com', 'role' => 'kasir'],
+            ['name' => 'kasir user', 'email' => 'kasir2@gmail.com', 'role' => 'kasir'],
+        ];
 
-        User::updateOrCreate(
-            ['name' => 'Penimbang User'],
-            [
-                'email' => 'penimbang@gmail.com',
-                'password' => Hash::make('password123'),
-                'role' => 'penimbang',
-                'status' => 'aktif',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['name' => 'Kasir User'],
-            [
-                'email' => 'kasir@gmail.com',
-                'password' => Hash::make('password123'),
-                'role' => 'kasir',
-                'status' => 'aktif',
-            ]
-        );
+        foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['name' => $userData['name']],
+                [
+                    'email' => $userData['email'],
+                    'password' => Hash::make('password123'),
+                    'role' => $userData['role'],
+                    'status' => 'aktif',
+                ]
+            );
+        }
     }
 }
