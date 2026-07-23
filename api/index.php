@@ -1,5 +1,10 @@
 <?php
 
+// Force HTTPS for Vercel Reverse Proxy
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+$_SERVER['HTTP_X_FORWARDED_PORT'] = '443';
+
 // Ensure storage directories exist in /tmp (Vercel's only writable directory)
 $tmpStorage = '/tmp/storage';
 if (!is_dir($tmpStorage)) {
