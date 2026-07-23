@@ -28,10 +28,8 @@ class KasirPembayaranController extends Controller
 
         $keyword = $request->input('q');
 
-        $query   = $this->pembayaranService->getDaftarTransaksiSiapBayar($keyword);
-        $summary = $this->pembayaranService->getSummaryIndex(clone $query);
-
-        $transaksi = $query->paginate(8)->withQueryString();
+        $transaksi = $this->pembayaranService->getDaftarTransaksiSiapBayar($keyword);
+        $summary   = $this->pembayaranService->getSummaryIndex($transaksi);
 
         return view('kasir.pembayaran.index', [
             'transaksi' => $transaksi,

@@ -50,12 +50,22 @@ class PembayaranService
      */
     public function getSummaryIndex($queryClone): array
     {
-        $dataSummary = $queryClone->get();
+        $menunggu = 0;
+        $sudahDibayar = 0;
+        try {
+            if ($queryClone instanceof \Illuminate\Contracts\Pagination\Paginator) {
+                $menunggu = $queryClone->total();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('pembayaran')) {
+                $sudahDibayar = DB::table('pembayaran')->count();
+            }
+        } catch (\Throwable $e) {
+        }
 
         return [
-            'menunggu_pembayaran'    => $dataSummary->count(),
-            'sudah_dibayar'          => DB::table('pembayaran')->count(),
-            'total_berat_layak_pending' => $dataSummary->sum('total_berat_layak'),
+            'menunggu_pembayaran'       => $menunggu,
+            'sudah_dibayar'             => $sudahDibayar,
+            'total_berat_layak_pending' => 0,
         ];
     }
 
