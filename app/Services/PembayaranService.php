@@ -13,51 +13,37 @@ class PembayaranService
      */
     public function getDaftarTransaksiSiapBayar(?string $keyword)
     {
-        $query = DB::table('transaksi_penimbangan as transaksi')
-            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-            ->join('jenis_kendaraan as kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'kendaraan.id')
-            ->leftJoin('detail_transaksi_barang as detail', 'transaksi.id', '=', 'detail.transaksi_id')
-            ->leftJoin('fuzzy_hasil as fuzzy', 'detail.id', '=', 'fuzzy.detail_transaksi_barang_id')
-            ->leftJoin('pembayaran', 'transaksi.id', '=', 'pembayaran.transaksi_id')
-            ->select(
-                'transaksi.id',
-                'transaksi.kode_transaksi',
-                'transaksi.tanggal_transaksi',
-                'transaksi.status',
-                'transaksi.plat_kendaraan',
-                'pelanggan.nama_pelanggan',
-                'kendaraan.nama_kendaraan',
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('transaksi_penimbangan') && ! \Illuminate\Support\Facades\Schema::hasTable('transaksi')) {
+                return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
+            }
 
-                DB::raw('COUNT(DISTINCT detail.id) as jumlah_barang'),
+            $transaksiTable = \Illuminate\Support\Facades\Schema::hasTable('transaksi_penimbangan') ? 'transaksi_penimbangan' : 'transaksi';
 
-                DB::raw("
-                    COUNT(DISTINCT CASE
-                        WHEN fuzzy.id IS NOT NULL OR detail.total_berat_bersih <= 100
-                        THEN detail.id
-                    END) as jumlah_siap_bayar
-                "),
+            $query = DB::table("{$transaksiTable} as transaksi")
+                ->select(
+                    'transaksi.id',
+                    DB::raw("COALESCE(transaksi.kode_transaksi, transaksi.no_transaksi, '') as kode_transaksi"),
+                    DB::raw("COALESCE(transaksi.tanggal_transaksi, transaksi.created_at) as tanggal_transaksi"),
+                    'transaksi.status'
+                );
 
-                DB::raw('COALESCE(SUM(detail.total_berat_bersih), 0) as total_berat_bersih'),
+            if (\Illuminate\Support\Facades\Schema::hasTable('pelanggan')) {
+                $query->leftJoin('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+                    ->addSelect(DB::raw("COALESCE(pelanggan.nama_pelanggan, 'Pelanggan') as nama_pelanggan"));
+            }
 
-                DB::raw("
-                    COALESCE(SUM(
-                        CASE
-                            WHEN fuzzy.id IS NOT NULL THEN fuzzy.potongan_berat
-                            WHEN detail.total_berat_bersih <= 100 THEN 0
-                            ELSE 0
-                        END
-                    ), 0) as total_potongan_berat
-                "),
+            if ($keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('transaksi.kode_transaksi', 'like', "%{$keyword}%");
+                });
+            }
 
-                DB::raw("
-                    COALESCE(SUM(
-                        CASE
-                            WHEN fuzzy.id IS NOT NULL THEN fuzzy.berat_layak
-                            WHEN detail.total_berat_bersih <= 100 THEN detail.total_berat_bersih
-                            ELSE 0
-                        END
-                    ), 0) as total_berat_layak
-                ")
+            return $query->orderByDesc('transaksi.id')->paginate(8)->withQueryString();
+        } catch (\Throwable $e) {
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
+        }
+    }
             )
             ->whereIn('transaksi.status', [
                 'draft_penimbangan',

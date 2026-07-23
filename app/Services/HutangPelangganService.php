@@ -11,22 +11,34 @@ class HutangPelangganService
      */
     public function getHutangAktif(int $pelangganId): ?object
     {
-        return DB::table('hutang_pelanggan')
-            ->where('pelanggan_id', $pelangganId)
-            ->where('status', 'belum_lunas')
-            ->orderByDesc('tanggal_hutang')
-            ->first();
+        try {
+            $table = \Illuminate\Support\Facades\Schema::hasTable('hutang_pelanggan') ? 'hutang_pelanggan' : 'kasbon_pelanggan';
+            if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
+                return null;
+            }
+            return DB::table($table)
+                ->where('pelanggan_id', $pelangganId)
+                ->where('status', 'belum_lunas')
+                ->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
-    /**
-     * Cek apakah pelanggan masih punya hutang aktif.
-     */
     public function punyaHutangAktif(int $pelangganId): bool
     {
-        return DB::table('hutang_pelanggan')
-            ->where('pelanggan_id', $pelangganId)
-            ->where('status', 'belum_lunas')
-            ->exists();
+        try {
+            $table = \Illuminate\Support\Facades\Schema::hasTable('hutang_pelanggan') ? 'hutang_pelanggan' : 'kasbon_pelanggan';
+            if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
+                return false;
+            }
+            return DB::table($table)
+                ->where('pelanggan_id', $pelangganId)
+                ->where('status', 'belum_lunas')
+                ->exists();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**

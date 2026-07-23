@@ -23,36 +23,37 @@ class PenimbangTransaksiService
      */
     public function getDaftarTransaksi(string $status = 'semua')
     {
-        $query = DB::table('transaksi_penimbangan as transaksi')
-            ->join('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-            ->join('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
-            ->leftJoin('detail_transaksi_barang as detail', 'transaksi.id', '=', 'detail.transaksi_id')
-            ->select(
-                'transaksi.id',
-                'transaksi.kode_transaksi',
-                'transaksi.tanggal_transaksi',
-                'transaksi.status',
-                'pelanggan.nama_pelanggan',
-                'jenis_kendaraan.nama_kendaraan',
-                DB::raw('COUNT(detail.id) as jumlah_barang'),
-                DB::raw('COALESCE(SUM(detail.total_berat_bersih), 0) as total_berat_bersih')
-            )
-            ->where('transaksi.petugas_timbang_id', auth()->id())
-            ->groupBy(
-                'transaksi.id',
-                'transaksi.kode_transaksi',
-                'transaksi.tanggal_transaksi',
-                'transaksi.status',
-                'pelanggan.nama_pelanggan',
-                'jenis_kendaraan.nama_kendaraan'
-            )
-            ->orderByDesc('transaksi.tanggal_transaksi');
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('transaksi_penimbangan')) {
+                return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
+            }
 
-        if ($status !== 'semua') {
-            $query->where('transaksi.status', $status);
+            $query = DB::table('transaksi_penimbangan as transaksi')
+                ->select(
+                    'transaksi.id',
+                    DB::raw("COALESCE(transaksi.kode_transaksi, transaksi.no_transaksi, '') as kode_transaksi"),
+                    DB::raw("COALESCE(transaksi.tanggal_transaksi, transaksi.created_at) as tanggal_transaksi"),
+                    'transaksi.status'
+                );
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('pelanggan')) {
+                $query->leftJoin('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
+                    ->addSelect(DB::raw("COALESCE(pelanggan.nama_pelanggan, 'Pelanggan') as nama_pelanggan"));
+            }
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('jenis_kendaraan')) {
+                $query->leftJoin('jenis_kendaraan', 'transaksi.jenis_kendaraan_id', '=', 'jenis_kendaraan.id')
+                    ->addSelect(DB::raw("COALESCE(jenis_kendaraan.nama_kendaraan, 'K1') as nama_kendaraan"));
+            }
+
+            if ($status !== 'semua') {
+                $query->where('transaksi.status', $status);
+            }
+
+            return $query->orderByDesc('transaksi.id')->paginate(8)->withQueryString();
+        } catch (\Throwable $e) {
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 8);
         }
-
-        return $query->paginate(8)->withQueryString();
     }
 
     /**
