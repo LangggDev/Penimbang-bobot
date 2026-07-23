@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['name' => 'QC User'],
             [
+                'email' => 'qc@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'qc',
                 'status' => 'aktif',
@@ -25,6 +26,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['name' => 'Penimbang User'],
             [
+                'email' => 'penimbang@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'penimbang',
                 'status' => 'aktif',
@@ -34,6 +36,7 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['name' => 'Kasir User'],
             [
+                'email' => 'kasir@gmail.com',
                 'password' => Hash::make('password123'),
                 'role' => 'kasir',
                 'status' => 'aktif',
