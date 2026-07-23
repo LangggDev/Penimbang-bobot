@@ -1,6 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+Route::get('/seed-now', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        (new \Database\Seeders\DatabaseSeeder())->run();
+        return '<h1>SUCCESS! Database seeded successfully.</h1><p>You can now <a href="/login">Login Here</a>.</p>';
+    } catch (\Throwable $e) {
+        return '<h1>SEEDING ERROR:</h1><pre>' . $e->getMessage() . "\n" . $e->getTraceAsString() . '</pre>';
+    }
+});
 
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'home'])->name('home');
 
