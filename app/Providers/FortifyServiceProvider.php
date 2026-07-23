@@ -29,15 +29,25 @@ class FortifyServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Fortify::authenticateUsing(function (Request $request) {
-    $user = User::where('name', $request->name)
-        ->where('status', 'aktif')
-        ->first();
+            $username = trim($request->name);
+            
+            $query = User::where(function ($q) use ($username) {
+                $q->where('name', $username)
+                  ->orWhere('email', $username)
+                  ->orWhereRaw('LOWER(name) = ?', [strtolower($username)]);
+            });
 
-    if ($user && Hash::check($request->password, $user->password)) {
-        return $user;
-         }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'status')) {
+                $query->where('status', 'aktif');
+            }
 
-        return null;
+            $user = $query->first();
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                return $user;
+            }
+
+            return null;
         });
         $this->configureActions();
         $this->configureViews();
