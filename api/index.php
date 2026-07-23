@@ -27,5 +27,22 @@ putenv('VIEW_COMPILED_PATH=/tmp/storage/framework/views');
 // Tell Laravel to use /tmp/storage as the main storage path
 $_ENV['APP_STORAGE'] = $tmpStorage;
 
+// Auto run migration & seeding on Vercel if needed
+if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL'])) {
+    try {
+        if (!file_exists('/tmp/migrated.lock')) {
+            touch('/tmp/migrated.lock');
+            require __DIR__ . '/../vendor/autoload.php';
+            $app = require __DIR__ . '/../bootstrap/app.php';
+            $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
+            $kernel->bootstrap();
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        }
+    } catch (\Throwable $e) {
+        // Continue application execution
+    }
+}
+
 // Forward Vercel requests to Laravel index.php
 require __DIR__ . '/../public/index.php';
