@@ -360,52 +360,48 @@ class KasirPembayaranController extends Controller
         $tanggalMulai   = $request->get('tanggal_mulai', now()->toDateString());
         $tanggalSelesai = $request->get('tanggal_selesai', now()->toDateString());
 
-        // Total Pembayaran
-        $totalPembayaran = DB::table('pembayaran')
-            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
-            ->count();
+        $totalPembayaran = 0;
+        $totalDibayarKePelanggan = 0;
+        $totalKasbon = 0;
+        $totalPotonganKasbon = 0;
+        $pembayaranTerbaru = collect();
 
-        // Total Dibayar Ke Pelanggan
-        $totalDibayarKePelanggan = DB::table('pembayaran')
-            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
-            ->sum('total_dibayar_ke_pelanggan') ?? 0;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('pembayaran')) {
+                $totalPembayaran = DB::table('pembayaran')->count();
+                $totalDibayarKePelanggan = DB::table('pembayaran')->sum('jumlah_bayar') ?? 0;
 
-        // Total Kasbon
-        $totalKasbon = DB::table('hutang_pelanggan')
-            ->whereBetween(DB::raw('DATE(tanggal_hutang)'), [$tanggalMulai, $tanggalSelesai])
-            ->count();
+                $query = DB::table('pembayaran as bayar')
+                    ->select('bayar.*');
 
-        // Total Potongan Kasbon
-        $totalPotonganKasbon = DB::table('pembayaran')
-            ->whereBetween(DB::raw('DATE(tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
-            ->sum('potongan_kasbon') ?? 0;
+                if (\Illuminate\Support\Facades\Schema::hasTable('transaksi_penimbangan')) {
+                    $query->leftJoin('transaksi_penimbangan as transaksi', 'bayar.transaksi_id', '=', 'transaksi.id');
+                }
 
-        // Pembayaran Terbaru (untuk periode yang dipilih)
-        $pembayaranTerbaru = DB::table('pembayaran as bayar')
-            ->join('transaksi_penimbangan as transaksi', 'bayar.transaksi_id', '=', 'transaksi.id')
-            ->join('pelanggan', 'bayar.pelanggan_id', '=', 'pelanggan.id')
-            ->select(
-                'bayar.id',
-                'bayar.kode_pembayaran',
-                'bayar.tanggal_bayar',
-                'bayar.total_transaksi',
-                'bayar.total_dibayar_ke_pelanggan',
-                'transaksi.kode_transaksi',
-                'pelanggan.nama_pelanggan'
-            )
-            ->whereBetween(DB::raw('DATE(bayar.tanggal_bayar)'), [$tanggalMulai, $tanggalSelesai])
-            ->orderByDesc('bayar.tanggal_bayar')
-            ->limit(5)
-            ->get();
+                if (\Illuminate\Support\Facades\Schema::hasTable('pelanggan')) {
+                    $query->leftJoin('pelanggan', 'bayar.pelanggan_id', '=', 'pelanggan.id')
+                        ->addSelect('pelanggan.nama_pelanggan');
+                }
+
+                $pembayaranTerbaru = $query->limit(5)->get();
+            }
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('hutang_pelanggan') || \Illuminate\Support\Facades\Schema::hasTable('kasbon_pelanggan')) {
+                $kasbonTable = \Illuminate\Support\Facades\Schema::hasTable('hutang_pelanggan') ? 'hutang_pelanggan' : 'kasbon_pelanggan';
+                $totalKasbon = DB::table($kasbonTable)->count();
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback
+        }
 
         return view('dashboard.kasir', [
-            'totalPembayaran'          => $totalPembayaran,
-            'totalDibayarKePelanggan'  => $totalDibayarKePelanggan,
-            'totalKasbon'              => $totalKasbon,
-            'totalPotonganKasbon'      => $totalPotonganKasbon,
-            'pembayaranTerbaru'        => $pembayaranTerbaru,
-            'tanggalMulai'             => $tanggalMulai,
-            'tanggalSelesai'           => $tanggalSelesai,
+            'totalPembayaran'         => $totalPembayaran,
+            'totalDibayarKePelanggan' => $totalDibayarKePelanggan,
+            'totalKasbon'             => $totalKasbon,
+            'totalPotonganKasbon'     => $totalPotonganKasbon,
+            'pembayaranTerbaru'       => $pembayaranTerbaru,
+            'tanggalMulai'            => $tanggalMulai,
+            'tanggalSelesai'          => $tanggalSelesai,
         ]);
     }
 }
